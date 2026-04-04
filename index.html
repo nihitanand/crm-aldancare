@@ -70,7 +70,7 @@ const downloadSampleValue = () => {
 /* ══════════════════════════════════════════════════════
    CONSTANTS
 ══════════════════════════════════════════════════════ */
-const APP_VERSION = "v1.4";
+const APP_VERSION = "v1.5";
 const MONTHS  = ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
 const YEARS   = ["FY 2026-27","FY 2027-28"];
 const HQ_LIST = ["Siwan","Bettiah","Darbhanga","Muzaffarpur","Begusarai","Purnea","Saharsa","Patna-1","Patna-2","Patna-3"];
@@ -230,10 +230,16 @@ function App() {
     saveProposal(pid, {...p, status:STATUSES.APPROVED, approvedBy:user.email, approvedAt:now(), updatedAt:now()});
     notify("Approved!");
   };
-  const confirmProposal = (pid, issuedEntries) => {
+  const confirmProposal = (pid, issuedEntries, revert=false) => {
     const p = proposals[pid]; if (!p) return;
-    saveProposal(pid, {...p, status:STATUSES.CONFIRMED, issuedEntries, confirmedBy:user.email, confirmedAt:now(), updatedAt:now()});
-    notify("Confirmed!");
+    if (revert) {
+      // Unconfirm — revert to Approved
+      saveProposal(pid, {...p, status:STATUSES.APPROVED, issuedEntries:null, confirmedBy:null, confirmedAt:null, updatedAt:now()});
+      notify("Unconfirmed — reverted to Approved","amber");
+    } else {
+      saveProposal(pid, {...p, status:STATUSES.CONFIRMED, issuedEntries, confirmedBy:user.email, confirmedAt:now(), updatedAt:now()});
+      notify("Confirmed!");
+    }
   };
   const rejectProposal = (pid) => {
     const p = proposals[pid]; if (!p) return;
@@ -1257,11 +1263,12 @@ function MyProposalsView({myProposals, onWithdraw, setConfirm}) {
 /* ══════════════════════════════════════════════════════
    APPROVE VIEW
 ══════════════════════════════════════════════════════ */
-function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, setConfirm}) {
+function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, onWithdraw, setConfirm}) {
   const [tab,         setTab]         = useState("pending");
   const [hqFilter,    setHqFilter]    = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [issuedAmts,  setIssuedAmts]  = useState({});
+  const [selected,    setSelected]    = useState({}); // pid → bool
 
   const getDoc = (key) => DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===key);
   const statusMap = {pending:"Proposed",approved:"Approved",confirmed:"Confirmed",all:null};
@@ -1275,21 +1282,59 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, s
   }, [proposalList, tab, hqFilter, monthFilter]);
 
   const tabCounts = useMemo(()=>({
-    pending: proposalList.filter(p=>p.status==="Proposed").length,
-    approved: proposalList.filter(p=>p.status==="Approved").length,
+    pending:   proposalList.filter(p=>p.status==="Proposed").length,
+    approved:  proposalList.filter(p=>p.status==="Approved").length,
     confirmed: proposalList.filter(p=>p.status==="Confirmed").length,
-    all: proposalList.length
+    all:       proposalList.length
   }), [proposalList]);
 
-  const handleConfirm = (p) => {
+  // Reset selection when tab/filter changes
+  useEffect(()=>setSelected({}), [tab, hqFilter, monthFilter]);
+
+  const selectedPids   = Object.keys(selected).filter(k=>selected[k]);
+  const selectedProposals = selectedPids.map(pid=>proposalList.find(p=>p.id===pid)).filter(Boolean);
+  const selectedTotal  = selectedProposals.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0);
+
+  const toggleSelect  = (pid) => setSelected(prev=>({...prev,[pid]:!prev[pid]}));
+  const selectAll     = () => { const s={}; filtered.forEach(p=>{s[p.id]=true;}); setSelected(s); };
+  const deselectAll   = () => setSelected({});
+
+  // Single actions — no dialog
+  const handleApprove    = (pid) => onApprove(pid);
+  const handleConfirm    = (p)   => {
     const issued = issuedAmts[p.id]!==undefined ? Number(issuedAmts[p.id]) : Number(p.entries?.[0]?.proposed||0);
-    const doc = getDoc(p.doctorKey);
+    onConfirm(p.id,[{issued,proposed:p.entries?.[0]?.proposed}]);
+  };
+  const handleUnconfirm  = (pid) => {
+    const p = proposalList.find(x=>x.id===pid); if(!p) return;
+    // revert Confirmed → Approved
+    onConfirm(pid, null, true); // pass revert flag
+  };
+
+  // Bulk actions — with confirm dialog
+  const bulkApprove = () => {
+    const pending = selectedProposals.filter(p=>p.status===STATUSES.PROPOSED);
+    if (!pending.length) return;
     setConfirm({
-      msg:`Confirm & issue ${inr(issued)} to ${doc?.name}?`,
-      okLabel:"Confirm & Issue",
-      onOk:()=>onConfirm(p.id,[{issued,proposed:p.entries?.[0]?.proposed}])
+      msg:`Approve ${pending.length} proposal${pending.length>1?"s":""} totalling ${inr(pending.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0))}?`,
+      okLabel:`Approve ${pending.length}`,
+      onOk:()=>{ pending.forEach(p=>onApprove(p.id)); setSelected({}); }
     });
   };
+
+  const bulkConfirm = () => {
+    const approved = selectedProposals.filter(p=>p.status===STATUSES.APPROVED);
+    if (!approved.length) return;
+    setConfirm({
+      msg:`Confirm & issue ${approved.length} proposal${approved.length>1?"s":""} totalling ${inr(approved.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0))}?`,
+      okLabel:`Confirm ${approved.length}`,
+      onOk:()=>{ approved.forEach(p=>{ const issued=Number(p.entries?.[0]?.proposed||0); onConfirm(p.id,[{issued,proposed:p.entries?.[0]?.proposed}]); }); setSelected({}); }
+    });
+  };
+
+  // Bulk select helpers based on current tab
+  const canBulkApprove  = selectedProposals.some(p=>p.status===STATUSES.PROPOSED);
+  const canBulkConfirm  = selectedProposals.some(p=>p.status===STATUSES.APPROVED);
 
   return (
     <div>
@@ -1313,13 +1358,44 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, s
         </select>
       </div>
 
+      {/* Bulk action bar */}
+      {selectedPids.length>0 && (
+        <div className="bg-slate-800 text-white rounded-xl px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+          <span className="text-sm font-bold">{selectedPids.length} selected</span>
+          <span className="text-xs text-slate-400 font-semibold">Total: <strong className="text-white">{inr(selectedTotal)}</strong></span>
+          <div className="flex gap-2 ml-auto flex-wrap">
+            {canBulkApprove && (
+              <button onClick={bulkApprove}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-lg">
+                ✅ Approve Selected ({selectedProposals.filter(p=>p.status===STATUSES.PROPOSED).length}) — {inr(selectedProposals.filter(p=>p.status===STATUSES.PROPOSED).reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0))}
+              </button>
+            )}
+            {canBulkConfirm && (
+              <button onClick={bulkConfirm}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-lg">
+                🎯 Confirm Selected ({selectedProposals.filter(p=>p.status===STATUSES.APPROVED).length}) — {inr(selectedProposals.filter(p=>p.status===STATUSES.APPROVED).reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0))}
+              </button>
+            )}
+            <button onClick={deselectAll} className="px-3 py-1.5 bg-slate-600 text-slate-300 text-xs font-bold rounded-lg">Clear</button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>{["Doctor","HQ","Type","Month","Year","Proposed","Status","Issued Amt","By","Action"].map(h=>(
-                <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
-              ))}</tr>
+              <tr>
+                <th className="px-3 py-2.5">
+                  <input type="checkbox"
+                    checked={filtered.length>0 && filtered.every(p=>selected[p.id])}
+                    onChange={e=>e.target.checked?selectAll():deselectAll()}
+                    className="rounded"/>
+                </th>
+                {["Doctor","HQ","Type","Month","Year","Proposed","Status","Issued Amt","By","Action"].map(h=>(
+                  <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
+                ))}
+              </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filtered.map(p => {
@@ -1327,13 +1403,17 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, s
                 const sc  = STATUS_COLORS[p.status];
                 const proposed = p.entries?.[0]?.proposed||0;
                 const confirmed_issued = p.issuedEntries?.[0]?.issued;
+                const isSelected = !!selected[p.id];
                 return (
-                  <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-3 py-2.5 font-semibold text-slate-800">{doc?.name||"—"}</td>
+                  <tr key={p.id} className={`hover:bg-slate-50 ${isSelected?"bg-blue-50":""}`}>
+                    <td className="px-3 py-2.5">
+                      <input type="checkbox" checked={isSelected} onChange={()=>toggleSelect(p.id)} className="rounded"/>
+                    </td>
+                    <td className="px-3 py-2.5 font-semibold text-slate-800 text-xs">{doc?.name||"—"}</td>
                     <td className="px-3 py-2.5 text-xs text-slate-400">{doc?.hq}</td>
                     <td className="px-3 py-2.5">
                       <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${p.type==="additional"?"bg-indigo-100 text-indigo-700":"bg-slate-100 text-slate-600"}`}>
-                        {p.type==="additional"?"Additional":"Primary"}
+                        {p.type==="additional"?"Addl":"Primary"}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 text-xs text-slate-500">{p.month}</td>
@@ -1354,19 +1434,24 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, s
                       <div className="flex gap-1 flex-wrap">
                         {p.status===STATUSES.PROPOSED&&(
                           <>
-                            <button onClick={()=>onApprove(p.id)} className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg">Approve</button>
+                            <button onClick={()=>handleApprove(p.id)} className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700">Approve</button>
                             <button onClick={()=>setConfirm({msg:`Reject "${doc?.name}"?`,okLabel:"Reject",onOk:()=>onReject(p.id)})}
                               className="px-2 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-lg">Reject</button>
                           </>
                         )}
                         {p.status===STATUSES.APPROVED&&(
                           <>
-                            <button onClick={()=>handleConfirm(p)} className="px-2 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg">Confirm</button>
+                            <button onClick={()=>handleConfirm(p)} className="px-2 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">Confirm</button>
                             <button onClick={()=>setConfirm({msg:`Undo approval for "${doc?.name}"?`,okLabel:"Undo",onOk:()=>onReject(p.id)})}
                               className="px-2 py-1 bg-slate-100 text-slate-400 text-xs font-bold rounded-lg">Undo</button>
                           </>
                         )}
-                        {p.status===STATUSES.CONFIRMED&&<span className="text-xs text-emerald-600 font-bold">✓ Done</span>}
+                        {p.status===STATUSES.CONFIRMED&&(
+                          <button onClick={()=>handleUnconfirm(p.id)}
+                            className="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-200 border border-amber-200">
+                            Unconfirm
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1375,7 +1460,7 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, s
             </tbody>
           </table>
         </div>
-        {filtered.length===0 && <div className="text-center py-10 text-slate-300 text-sm">No proposals in this view</div>}
+        {filtered.length===0&&<div className="text-center py-10 text-slate-300 text-sm">No proposals in this view</div>}
       </div>
     </div>
   );
