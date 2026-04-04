@@ -70,7 +70,7 @@ const downloadSampleValue = () => {
 /* ══════════════════════════════════════════════════════
    CONSTANTS
 ══════════════════════════════════════════════════════ */
-const APP_VERSION = "v1.3";
+const APP_VERSION = "v1.4";
 const MONTHS  = ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
 const YEARS   = ["FY 2026-27","FY 2027-28"];
 const HQ_LIST = ["Siwan","Bettiah","Darbhanga","Muzaffarpur","Begusarai","Purnea","Saharsa","Patna-1","Patna-2","Patna-3"];
@@ -685,6 +685,7 @@ function ProposeView({user, proposals, onSave, onWithdraw, notify, setConfirm}) 
   const [addlModal,   setAddlModal]   = useState(null); // additional proposal modal
   const [addlMonth,   setAddlMonth]   = useState("");
   const [addlAmt,     setAddlAmt]     = useState(0);
+  const [expandedKeys,setExpandedKeys]= useState({}); // doctorKey → bool (show addl rows)
 
   const periodReady = month && year;
 
@@ -972,57 +973,103 @@ function ProposeView({user, proposals, onSave, onWithdraw, notify, setConfirm}) 
                 <tbody className="divide-y divide-slate-50">
                   {doctors.map(doc=>{
                     const key = doc.name+"___"+doc.hq;
-                    const primary = getPrimary(key);
-                    const allP    = getAllProposals(key);
+                    const primary   = getPrimary(key);
+                    const allP      = getAllProposals(key);
+                    const addlProps = allP.filter(p=>p.type==="additional");
                     const totalProposed = allP.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0);
                     const isSelected = !!selected[key];
                     const canWithdraw = primary && primary.status===STATUSES.PROPOSED;
                     const sc = primary ? STATUS_COLORS[primary.status] : null;
+                    const isExpanded = !!expandedKeys[key];
                     return (
-                      <tr key={key} className={`hover:bg-slate-50 ${isSelected?"bg-blue-50":""}`}>
-                        <td className="px-3 py-2.5">
-                          <input type="checkbox" checked={isSelected} onChange={()=>toggleSelect(key)} className="rounded"/>
-                        </td>
-                        <td className="px-3 py-2.5 text-xs text-slate-400">{doc.hq}</td>
-                        <td className="px-3 py-2.5 font-semibold text-slate-800 text-xs">{doc.name}</td>
-                        <td className="px-3 py-2.5 text-xs text-slate-500">{doc.crm25_act>0?inr(doc.crm25_act):"—"}</td>
-                        <td className="px-3 py-2.5 font-bold text-blue-700 text-xs">{doc.crm26>0?inr(doc.crm26):"—"}</td>
-                        <td className="px-3 py-2.5">
-                          {primary
-                            ?<div>
-                              <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{primary.status}</span>
-                              <span className="text-xs text-slate-500 ml-1">{primary.month} · {inr(primary.entries?.[0]?.proposed)}</span>
-                              {allP.length>1&&<span className="text-xs text-indigo-500 ml-1">+{allP.length-1} addl</span>}
+                      <React.Fragment key={key}>
+                        <tr className={`hover:bg-slate-50 ${isSelected?"bg-blue-50":""}`}>
+                          <td className="px-3 py-2.5">
+                            <input type="checkbox" checked={isSelected} onChange={()=>toggleSelect(key)} className="rounded"/>
+                          </td>
+                          <td className="px-3 py-2.5 text-xs text-slate-400">{doc.hq}</td>
+                          <td className="px-3 py-2.5 font-semibold text-slate-800 text-xs">{doc.name}</td>
+                          <td className="px-3 py-2.5 text-xs text-slate-500">{doc.crm25_act>0?inr(doc.crm25_act):"—"}</td>
+                          <td className="px-3 py-2.5 font-bold text-blue-700 text-xs">{doc.crm26>0?inr(doc.crm26):"—"}</td>
+                          <td className="px-3 py-2.5">
+                            {primary
+                              ?<div className="flex items-center gap-1 flex-wrap">
+                                <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{primary.status}</span>
+                                <span className="text-xs text-slate-500">{primary.month} · {inr(primary.entries?.[0]?.proposed)}</span>
+                                {addlProps.length>0&&(
+                                  <button
+                                    onClick={()=>setExpandedKeys(prev=>({...prev,[key]:!prev[key]}))}
+                                    className={`px-1.5 py-0.5 rounded-full text-xs font-bold cursor-pointer transition-colors ${isExpanded?"bg-indigo-600 text-white":"bg-indigo-100 text-indigo-700 hover:bg-indigo-200"}`}>
+                                    {isExpanded?"▲":"▼"} +{addlProps.length} addl
+                                  </button>
+                                )}
+                              </div>
+                              :<span className="text-slate-300 text-xs">— Pending</span>}
+                          </td>
+                          <td className="px-3 py-2.5 font-bold text-slate-700 text-xs">
+                            {totalProposed>0?inr(totalProposed):<span className="text-slate-300">—</span>}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex gap-1 flex-wrap">
+                              {!primary&&(
+                                <button onClick={()=>openEdit(doc)}
+                                  className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg">Propose</button>
+                              )}
+                              {primary&&primary.status===STATUSES.PROPOSED&&(
+                                <button onClick={()=>openEdit(doc)}
+                                  className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">Edit</button>
+                              )}
+                              {primary&&(
+                                <button onClick={()=>openAddl(doc)}
+                                  className="px-2.5 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg">+ Add</button>
+                              )}
+                              {canWithdraw&&(
+                                <button onClick={()=>handleWithdraw(primary.id, doc.name)}
+                                  className="px-2.5 py-1 bg-red-50 text-red-500 text-xs font-bold rounded-lg border border-red-200">✕</button>
+                              )}
+                              {primary&&!canWithdraw&&(
+                                <span className="text-xs text-slate-300 font-semibold">Locked</span>
+                              )}
                             </div>
-                            :<span className="text-slate-300 text-xs">— Pending</span>}
-                        </td>
-                        <td className="px-3 py-2.5 font-bold text-slate-700 text-xs">
-                          {totalProposed>0?inr(totalProposed):<span className="text-slate-300">—</span>}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex gap-1 flex-wrap">
-                            {!primary&&(
-                              <button onClick={()=>openEdit(doc)}
-                                className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg">Propose</button>
-                            )}
-                            {primary&&primary.status===STATUSES.PROPOSED&&(
-                              <button onClick={()=>openEdit(doc)}
-                                className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">Edit</button>
-                            )}
-                            {primary&&(
-                              <button onClick={()=>openAddl(doc)}
-                                className="px-2.5 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg">+ Add</button>
-                            )}
-                            {canWithdraw&&(
-                              <button onClick={()=>handleWithdraw(primary.id, doc.name)}
-                                className="px-2.5 py-1 bg-red-50 text-red-500 text-xs font-bold rounded-lg border border-red-200">✕</button>
-                            )}
-                            {primary&&!canWithdraw&&(
-                              <span className="text-xs text-slate-300 font-semibold">Locked</span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                          </td>
+                        </tr>
+                        {/* Expanded additional proposals rows */}
+                        {isExpanded && addlProps.map((ap,idx)=>{
+                          const apSc = STATUS_COLORS[ap.status];
+                          const canWithdrawAddl = ap.status===STATUSES.PROPOSED;
+                          return (
+                            <tr key={ap.id} className="bg-indigo-50 border-l-4 border-indigo-300">
+                              <td className="px-3 py-2"></td>
+                              <td colSpan={2} className="px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider">↳ Additional {idx+1}</span>
+                                </div>
+                              </td>
+                              <td className="px-3 py-2 text-xs text-slate-400">{ap.month}</td>
+                              <td className="px-3 py-2 font-bold text-indigo-700 text-xs">{inr(ap.entries?.[0]?.proposed)}</td>
+                              <td className="px-3 py-2">
+                                <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${apSc.bg} ${apSc.text}`}>{ap.status}</span>
+                              </td>
+                              <td className="px-3 py-2"></td>
+                              <td className="px-3 py-2">
+                                {canWithdrawAddl ? (
+                                  <button
+                                    onClick={()=>setConfirm({
+                                      msg:`Withdraw additional proposal for "${doc.name}" (${ap.month} · ${inr(ap.entries?.[0]?.proposed)})?`,
+                                      okLabel:"Withdraw",
+                                      onOk:()=>onWithdraw(ap.id)
+                                    })}
+                                    className="px-2.5 py-1 bg-red-50 text-red-500 text-xs font-bold rounded-lg border border-red-200 hover:bg-red-100">
+                                    ✕ Remove
+                                  </button>
+                                ) : (
+                                  <span className="text-xs text-slate-300 font-semibold">Locked</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
