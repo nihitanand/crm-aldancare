@@ -10,37 +10,33 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-slate-50">
 <div id="root"></div>
 <script type="text/babel">
 
 /* ══════════════════════════════════════════════════════
-   FIREBASE CONFIG
+   FIREBASE
 ══════════════════════════════════════════════════════ */
 const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyBJcohYrAYOMn-C_qdbPXMwOeMyGy8Sw1M",
-  authDomain:        "fintech-nd.firebaseapp.com",
-  databaseURL:       "https://fintech-nd-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:         "fintech-nd",
-  storageBucket:     "fintech-nd.firebasestorage.app",
-  messagingSenderId: "577595905463",
-  appId:             "1:577595905463:web:69beb0a824b0d972560432"
+  apiKey:"AIzaSyBJcohYrAYOMn-C_qdbPXMwOeMyGy8Sw1M",authDomain:"fintech-nd.firebaseapp.com",
+  databaseURL:"https://fintech-nd-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"fintech-nd",storageBucket:"fintech-nd.firebasestorage.app",
+  messagingSenderId:"577595905463",appId:"1:577595905463:web:69beb0a824b0d972560432"
 };
 firebase.initializeApp(FIREBASE_CONFIG);
 const DB = firebase.database();
 const DB_PATH = "crm26/v1";
 
-const { useState, useEffect, useMemo, useCallback } = React;
-
-/* ══════════════════════════════════════════════════════
-   DOCTOR MASTER DATA (251 doctors)
-══════════════════════════════════════════════════════ */
-const DOCTOR_MASTER = [{"hq":"Siwan","name":"AKHOURI URMILA","crm26":20000,"sales26":15000,"crm25_act":20000,"avg_ptr25":12469,"plan_crm25":20000,"plan_sales25":12469,"remarks":""},{"hq":"Siwan","name":"BINOD KUMARI SHARMA","crm26":0,"sales26":0,"crm25_act":30000,"avg_ptr25":10039,"plan_crm25":30000,"plan_sales25":10039,"remarks":""},{"hq":"Siwan","name":"DR.ANAMIKA SHARMA","crm26":30000,"sales26":20000,"crm25_act":0,"avg_ptr25":9579,"plan_crm25":0,"plan_sales25":9579,"remarks":""},{"hq":"Siwan","name":"DR.MITALI KUMARI","crm26":25000,"sales26":15000,"crm25_act":20000,"avg_ptr25":12732,"plan_crm25":20000,"plan_sales25":12732,"remarks":""},{"hq":"Siwan","name":"DR.NIDHI SORI","crm26":25000,"sales26":14000,"crm25_act":25000,"avg_ptr25":14016,"plan_crm25":25000,"plan_sales25":14016,"remarks":""},{"hq":"Siwan","name":"DR.RENU KASHYAP","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Siwan","name":"DR.WORTIKA KESARI","crm26":10000,"sales26":7500,"crm25_act":10000,"avg_ptr25":7261,"plan_crm25":10000,"plan_sales25":7261,"remarks":""},{"hq":"Siwan","name":"MANJU SINGH","crm26":100000,"sales26":50000,"crm25_act":100000,"avg_ptr25":49358,"plan_crm25":100000,"plan_sales25":49358,"remarks":""},{"hq":"Siwan","name":"R.KIRAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Siwan","name":"R.TABASSUM","crm26":50000,"sales26":35000,"crm25_act":30000,"avg_ptr25":32601,"plan_crm25":30000,"plan_sales25":32601,"remarks":""},{"hq":"Siwan","name":"RITA SINHA","crm26":50000,"sales26":30000,"crm25_act":30000,"avg_ptr25":23145,"plan_crm25":30000,"plan_sales25":23145,"remarks":""},{"hq":"Siwan","name":"ZEBA PRAVEEN","crm26":40000,"sales26":35000,"crm25_act":25000,"avg_ptr25":26731,"plan_crm25":25000,"plan_sales25":26731,"remarks":""},{"hq":"Siwan","name":"KAUSHAR JAHAN","crm26":0,"sales26":0,"crm25_act":25000,"avg_ptr25":5888,"plan_crm25":25000,"plan_sales25":5888,"remarks":""},{"hq":"Siwan","name":"MANISHA SINGH","crm26":25000,"sales26":15000,"crm25_act":0,"avg_ptr25":10583,"plan_crm25":0,"plan_sales25":10583,"remarks":""},{"hq":"Siwan","name":"RANJITA SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Siwan","name":"KALPANA SHARMA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Siwan","name":"SUMAN KUMARI","crm26":20000,"sales26":10000,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Bettiah","name":"ABHILASHA JHA","crm26":25000,"sales26":15000,"crm25_act":15000,"avg_ptr25":10439,"plan_crm25":15000,"plan_sales25":10439,"remarks":""},{"hq":"Bettiah","name":"DR KAUSHALYA KESARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Bettiah","name":"DR KUMKUM SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Bettiah","name":"DR POONAM SINHA","crm26":25000,"sales26":20000,"crm25_act":25000,"avg_ptr25":19054,"plan_crm25":25000,"plan_sales25":19054,"remarks":""},{"hq":"Bettiah","name":"DR.MANJU CHOUDHARY","crm26":30000,"sales26":20000,"crm25_act":30000,"avg_ptr25":17779,"plan_crm25":30000,"plan_sales25":17779,"remarks":"check-sale impact"},{"hq":"Bettiah","name":"DR.MIRA CHOUDHARY","crm26":40000,"sales26":28000,"crm25_act":40000,"avg_ptr25":27546,"plan_crm25":40000,"plan_sales25":27546,"remarks":"ok"},{"hq":"Bettiah","name":"SEEMA GIRI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Bettiah","name":"TAHERA TABASSUM","crm26":25000,"sales26":15000,"crm25_act":25000,"avg_ptr25":12797,"plan_crm25":25000,"plan_sales25":12797,"remarks":"ok"},{"hq":"Bettiah","name":"SHEETAL NARULA","crm26":15000,"sales26":10000,"crm25_act":0,"avg_ptr25":430,"plan_crm25":0,"plan_sales25":430,"remarks":"check-sale impact"},{"hq":"Bettiah","name":"SHIKHA PANDEY","crm26":15000,"sales26":10000,"crm25_act":0,"avg_ptr25":648,"plan_crm25":0,"plan_sales25":648,"remarks":"check-sale impact"},{"hq":"Bettiah","name":"REENA RANI","crm26":25000,"sales26":15000,"crm25_act":0,"avg_ptr25":3158,"plan_crm25":0,"plan_sales25":3158,"remarks":"check-sale impact"},{"hq":"Bettiah","name":"SUDHA CHANDRA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Bettiah","name":"JYOTI JHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Bettiah","name":"C.L JHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":3113,"plan_crm25":0,"plan_sales25":3113,"remarks":"ignore Rx by daughter in law"},{"hq":"Bettiah","name":"PHOOL KUMARI SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":7264,"plan_crm25":0,"plan_sales25":7264,"remarks":"check-sale impact"},{"hq":"Bettiah","name":"SWASTI SINHA","crm26":50000,"sales26":25000,"crm25_act":0,"avg_ptr25":20763,"plan_crm25":0,"plan_sales25":20763,"remarks":"check-ok"},{"hq":"Bettiah","name":"DEBASIS CHATERJEE","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":4487,"plan_crm25":0,"plan_sales25":4487,"remarks":"ok"},{"hq":"Bettiah","name":"BRIJBIHARI PD","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Bettiah","name":"DR.VINCY","crm26":50000,"sales26":30000,"crm25_act":50000,"avg_ptr25":20666,"plan_crm25":50000,"plan_sales25":20666,"remarks":""},{"hq":"Bettiah","name":"DR. MUNDITA JAISWAL","crm26":50000,"sales26":30000,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":"Motihari \u2014 New addition"},{"hq":"Darbhanga","name":"DR MINA MAHASETH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Darbhanga","name":"DR.HINA ARZOO","crm26":30000,"sales26":20000,"crm25_act":30000,"avg_ptr25":17361,"plan_crm25":30000,"plan_sales25":17361,"remarks":""},{"hq":"Darbhanga","name":"DR.KUMUDINI JHA","crm26":30000,"sales26":18000,"crm25_act":30000,"avg_ptr25":17139,"plan_crm25":30000,"plan_sales25":17139,"remarks":""},{"hq":"Darbhanga","name":"DR.NUTAN RAI","crm26":50000,"sales26":25000,"crm25_act":0,"avg_ptr25":13724,"plan_crm25":0,"plan_sales25":13724,"remarks":""},{"hq":"Darbhanga","name":"SHRADHA THAKUR","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Darbhanga","name":"DR.GUNJAN TRIVEDI","crm26":60000,"sales26":25000,"crm25_act":90000,"avg_ptr25":23679,"plan_crm25":90000,"plan_sales25":23679,"remarks":""},{"hq":"Darbhanga","name":"SHILA SAHU","crm26":15000,"sales26":8000,"crm25_act":15000,"avg_ptr25":7049,"plan_crm25":15000,"plan_sales25":7049,"remarks":""},{"hq":"Darbhanga","name":"USHA JHA","crm26":50000,"sales26":30000,"crm25_act":40000,"avg_ptr25":22472,"plan_crm25":40000,"plan_sales25":22472,"remarks":""},{"hq":"Darbhanga","name":"DR.POONAM SINGH DB","crm26":30000,"sales26":15000,"crm25_act":20000,"avg_ptr25":10810,"plan_crm25":20000,"plan_sales25":10810,"remarks":""},{"hq":"Darbhanga","name":"SHILPI NARAIN SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Darbhanga","name":"PUSHPA RANI","crm26":30000,"sales26":15000,"crm25_act":20000,"avg_ptr25":13181,"plan_crm25":20000,"plan_sales25":13181,"remarks":""},{"hq":"Darbhanga","name":"PUJA MAHASETH","crm26":25000,"sales26":15000,"crm25_act":25000,"avg_ptr25":12630,"plan_crm25":25000,"plan_sales25":12630,"remarks":""},{"hq":"Darbhanga","name":"RENU RANA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Darbhanga","name":"ASHA KUMARI","crm26":40000,"sales26":25000,"crm25_act":20000,"avg_ptr25":16234,"plan_crm25":20000,"plan_sales25":16234,"remarks":""},{"hq":"Darbhanga","name":"PRATIBHA KUMARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Darbhanga","name":"GEETA BHARTI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Darbhanga","name":"SRI SABBA","crm26":40000,"sales26":25000,"crm25_act":25000,"avg_ptr25":15168,"plan_crm25":25000,"plan_sales25":15168,"remarks":""},{"hq":"Darbhanga","name":"NUTAN BALA SINGH","crm26":20000,"sales26":10000,"crm25_act":7500,"avg_ptr25":1856,"plan_crm25":7500,"plan_sales25":1856,"remarks":""},{"hq":"Muzaffarpur","name":"ANJU SINGH 2","crm26":50000,"sales26":26000,"crm25_act":40000,"avg_ptr25":25545,"plan_crm25":40000,"plan_sales25":25545,"remarks":""},{"hq":"Muzaffarpur","name":"Dr Prabhash kumar","crm26":25000,"sales26":14000,"crm25_act":20000,"avg_ptr25":13364,"plan_crm25":20000,"plan_sales25":13364,"remarks":""},{"hq":"Muzaffarpur","name":"DR.BHARTI TIWARI","crm26":40000,"sales26":28000,"crm25_act":0,"avg_ptr25":27496,"plan_crm25":0,"plan_sales25":27496,"remarks":""},{"hq":"Muzaffarpur","name":"DR.LATA GUPTA","crm26":20000,"sales26":11000,"crm25_act":20000,"avg_ptr25":10953,"plan_crm25":20000,"plan_sales25":10953,"remarks":""},{"hq":"Muzaffarpur","name":"DR.SABNAM","crm26":50000,"sales26":25000,"crm25_act":40000,"avg_ptr25":25303,"plan_crm25":40000,"plan_sales25":25303,"remarks":""},{"hq":"Muzaffarpur","name":"NIBHA","crm26":25000,"sales26":15000,"crm25_act":25000,"avg_ptr25":14807,"plan_crm25":25000,"plan_sales25":14807,"remarks":""},{"hq":"Muzaffarpur","name":"PRATIMA ANAND","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Muzaffarpur","name":"RANJANA KUMARI","crm26":10000,"sales26":7000,"crm25_act":10000,"avg_ptr25":6538,"plan_crm25":10000,"plan_sales25":6538,"remarks":""},{"hq":"Muzaffarpur","name":"RITA CHOUDHARY","crm26":50000,"sales26":28000,"crm25_act":40000,"avg_ptr25":28226,"plan_crm25":40000,"plan_sales25":28226,"remarks":""},{"hq":"Muzaffarpur","name":"SHOBHA RANI MISHRA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Muzaffarpur","name":"SUNITA KUMARI","crm26":10000,"sales26":8000,"crm25_act":10000,"avg_ptr25":7668,"plan_crm25":10000,"plan_sales25":7668,"remarks":""},{"hq":"Muzaffarpur","name":"SWEATA KUMARI","crm26":25000,"sales26":15000,"crm25_act":25000,"avg_ptr25":15120,"plan_crm25":25000,"plan_sales25":15120,"remarks":""},{"hq":"Muzaffarpur","name":"SANGEETA JHA","crm26":30000,"sales26":15000,"crm25_act":30000,"avg_ptr25":15062,"plan_crm25":30000,"plan_sales25":15062,"remarks":""},{"hq":"Muzaffarpur","name":"RAJNI SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Muzaffarpur","name":"SITARAM PD SINGH","crm26":15000,"sales26":9000,"crm25_act":15000,"avg_ptr25":8628,"plan_crm25":15000,"plan_sales25":8628,"remarks":""},{"hq":"Muzaffarpur","name":"DIPTI SINGH","crm26":20000,"sales26":13000,"crm25_act":20000,"avg_ptr25":13160,"plan_crm25":20000,"plan_sales25":13160,"remarks":""},{"hq":"Muzaffarpur","name":"KULDEEP KAUR","crm26":40000,"sales26":25000,"crm25_act":25000,"avg_ptr25":14754,"plan_crm25":25000,"plan_sales25":14754,"remarks":""},{"hq":"Muzaffarpur","name":"RANJANA MISHRA","crm26":50000,"sales26":30000,"crm25_act":40000,"avg_ptr25":25916,"plan_crm25":40000,"plan_sales25":25916,"remarks":""},{"hq":"Muzaffarpur","name":"ASFA KHAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Muzaffarpur","name":"RANGEELA SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Muzaffarpur","name":"KANCHAN KUMAR","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Muzaffarpur","name":"ANJANA PRAKASH","crm26":20000,"sales26":10000,"crm25_act":0,"avg_ptr25":8847,"plan_crm25":0,"plan_sales25":8847,"remarks":""},{"hq":"Muzaffarpur","name":"DR.VINITA TIWARY","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Muzaffarpur","name":"KARUNA OJHA","crm26":0,"sales26":5000,"crm25_act":0,"avg_ptr25":3920,"plan_crm25":0,"plan_sales25":3920,"remarks":""},{"hq":"Muzaffarpur","name":"DR.NISHI BALA","crm26":25000,"sales26":12000,"crm25_act":25000,"avg_ptr25":9067,"plan_crm25":25000,"plan_sales25":9067,"remarks":""},{"hq":"Begusarai","name":"CHANDRAHASH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"DR. MINI KUMARI","crm26":20000,"sales26":10000,"crm25_act":20000,"avg_ptr25":9354,"plan_crm25":20000,"plan_sales25":9354,"remarks":""},{"hq":"Begusarai","name":"DR.EKTA KUMARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"DR.LEENA KUMARI","crm26":30000,"sales26":15000,"crm25_act":20000,"avg_ptr25":8935,"plan_crm25":20000,"plan_sales25":8935,"remarks":""},{"hq":"Begusarai","name":"MANJU CHOUHAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"NIVEDITA KUMARI","crm26":20000,"sales26":10000,"crm25_act":20000,"avg_ptr25":10035,"plan_crm25":20000,"plan_sales25":10035,"remarks":""},{"hq":"Begusarai","name":"PRAGYA SINGH","crm26":100000,"sales26":35000,"crm25_act":40000,"avg_ptr25":27495,"plan_crm25":40000,"plan_sales25":27495,"remarks":""},{"hq":"Begusarai","name":"PREMLATA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"RANJANA SINHA","crm26":10000,"sales26":7000,"crm25_act":0,"avg_ptr25":1040,"plan_crm25":0,"plan_sales25":1040,"remarks":""},{"hq":"Begusarai","name":"RUPA SINGH","crm26":100000,"sales26":45000,"crm25_act":50000,"avg_ptr25":43446,"plan_crm25":50000,"plan_sales25":43446,"remarks":""},{"hq":"Begusarai","name":"SANGEETA SINHA","crm26":50000,"sales26":25000,"crm25_act":0,"avg_ptr25":6667,"plan_crm25":0,"plan_sales25":6667,"remarks":""},{"hq":"Begusarai","name":"SANGEETHA RAJAN","crm26":25000,"sales26":18000,"crm25_act":25000,"avg_ptr25":18036,"plan_crm25":25000,"plan_sales25":18036,"remarks":""},{"hq":"Begusarai","name":"SARIKA SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"UMA KUMARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"RAJKISHORI SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"VINITA SINHA","crm26":20000,"sales26":10000,"crm25_act":0,"avg_ptr25":861,"plan_crm25":0,"plan_sales25":861,"remarks":""},{"hq":"Begusarai","name":"SHASHI PRABHA","crm26":20000,"sales26":8000,"crm25_act":0,"avg_ptr25":3681,"plan_crm25":0,"plan_sales25":3681,"remarks":""},{"hq":"Begusarai","name":"DR.RAJNI KUMARI","crm26":30000,"sales26":15000,"crm25_act":30000,"avg_ptr25":14773,"plan_crm25":30000,"plan_sales25":14773,"remarks":""},{"hq":"Begusarai","name":"R.N JAIN","crm26":40000,"sales26":20000,"crm25_act":0,"avg_ptr25":12893,"plan_crm25":0,"plan_sales25":12893,"remarks":""},{"hq":"Begusarai","name":"K.K SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"ANITA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Begusarai","name":"KAMINI","crm26":20000,"sales26":12000,"crm25_act":0,"avg_ptr25":12230,"plan_crm25":0,"plan_sales25":12230,"remarks":""},{"hq":"Begusarai","name":"NIVEDITA KASHYAP","crm26":20000,"sales26":10000,"crm25_act":20000,"avg_ptr25":8657,"plan_crm25":20000,"plan_sales25":8657,"remarks":""},{"hq":"Begusarai","name":"SURESH PRASAD","crm26":30000,"sales26":20000,"crm25_act":15000,"avg_ptr25":9598,"plan_crm25":15000,"plan_sales25":9598,"remarks":""},{"hq":"Begusarai","name":"HARI PRIYA","crm26":40000,"sales26":25000,"crm25_act":25000,"avg_ptr25":14818,"plan_crm25":25000,"plan_sales25":14818,"remarks":""},{"hq":"Purnea","name":"APARNA DEY","crm26":50000,"sales26":30000,"crm25_act":30000,"avg_ptr25":22413,"plan_crm25":30000,"plan_sales25":22413,"remarks":""},{"hq":"Purnea","name":"DR.BHARTI SINHA","crm26":40000,"sales26":16000,"crm25_act":40000,"avg_ptr25":15586,"plan_crm25":40000,"plan_sales25":15586,"remarks":""},{"hq":"Purnea","name":"DR.N.K MISHRA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"DR.NIDHI RANI","crm26":10000,"sales26":8000,"crm25_act":20000,"avg_ptr25":8590,"plan_crm25":20000,"plan_sales25":8590,"remarks":""},{"hq":"Purnea","name":"DR.PRIYANKA JHA","crm26":200000,"sales26":93000,"crm25_act":200000,"avg_ptr25":92447,"plan_crm25":200000,"plan_sales25":92447,"remarks":""},{"hq":"Purnea","name":"DR.RESHMA ALI","crm26":120000,"sales26":50000,"crm25_act":100000,"avg_ptr25":44865,"plan_crm25":100000,"plan_sales25":44865,"remarks":""},{"hq":"Purnea","name":"DR.S. NIRANJAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"MEERA SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"NIDHI PD","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"NIKHAT FATMA","crm26":40000,"sales26":20000,"crm25_act":30000,"avg_ptr25":16916,"plan_crm25":30000,"plan_sales25":16916,"remarks":""},{"hq":"Purnea","name":"NOOR AKHTAR","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"PAYAL ANAND","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"RANJANA JHA","crm26":20000,"sales26":10000,"crm25_act":20000,"avg_ptr25":10730,"plan_crm25":20000,"plan_sales25":10730,"remarks":""},{"hq":"Purnea","name":"RENUKA SINGH","crm26":50000,"sales26":30000,"crm25_act":60000,"avg_ptr25":28688,"plan_crm25":60000,"plan_sales25":28688,"remarks":""},{"hq":"Purnea","name":"S.NIRANJAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"S.TABASSUM","crm26":50000,"sales26":30000,"crm25_act":25000,"avg_ptr25":21398,"plan_crm25":25000,"plan_sales25":21398,"remarks":""},{"hq":"Purnea","name":"SEEMA MISHRA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"VIBHA JHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"SHIVANI SINGH","crm26":30000,"sales26":20000,"crm25_act":25000,"avg_ptr25":16895,"plan_crm25":25000,"plan_sales25":16895,"remarks":""},{"hq":"Purnea","name":"MADIHA KESSAR","crm26":30000,"sales26":18000,"crm25_act":20000,"avg_ptr25":16622,"plan_crm25":20000,"plan_sales25":16622,"remarks":""},{"hq":"Purnea","name":"SHALINI PD","crm26":25000,"sales26":10000,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Purnea","name":"NUZRAT J.ATHAR","crm26":25000,"sales26":12000,"crm25_act":25000,"avg_ptr25":12163,"plan_crm25":25000,"plan_sales25":12163,"remarks":""},{"hq":"Purnea","name":"ANJU HARSH","crm26":50000,"sales26":25000,"crm25_act":30000,"avg_ptr25":23338,"plan_crm25":30000,"plan_sales25":23338,"remarks":""},{"hq":"Purnea","name":"ARTI SINHA","crm26":0,"sales26":5000,"crm25_act":0,"avg_ptr25":5034,"plan_crm25":0,"plan_sales25":5034,"remarks":""},{"hq":"Purnea","name":"SAHINA TANVIR","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":735,"plan_crm25":0,"plan_sales25":735,"remarks":""},{"hq":"Purnea","name":"AJAY KUMAR SINGH","crm26":15000,"sales26":9000,"crm25_act":0,"avg_ptr25":6881,"plan_crm25":0,"plan_sales25":6881,"remarks":""},{"hq":"Saharsa","name":"HINA FAROOKI","crm26":25000,"sales26":21000,"crm25_act":50000,"avg_ptr25":21184,"plan_crm25":50000,"plan_sales25":21184,"remarks":""},{"hq":"Saharsa","name":"KARUNA SHANKER","crm26":30000,"sales26":20000,"crm25_act":30000,"avg_ptr25":14444,"plan_crm25":30000,"plan_sales25":14444,"remarks":""},{"hq":"Saharsa","name":"NAIDU KUMARI","crm26":40000,"sales26":28000,"crm25_act":70000,"avg_ptr25":28106,"plan_crm25":70000,"plan_sales25":28106,"remarks":""},{"hq":"Saharsa","name":"RANJESH KR SINGH","crm26":25000,"sales26":16000,"crm25_act":25000,"avg_ptr25":15625,"plan_crm25":25000,"plan_sales25":15625,"remarks":""},{"hq":"Saharsa","name":"S.K ISSAR","crm26":10000,"sales26":7000,"crm25_act":10000,"avg_ptr25":5239,"plan_crm25":10000,"plan_sales25":5239,"remarks":""},{"hq":"Saharsa","name":"S.N THAKUR","crm26":25000,"sales26":12000,"crm25_act":25000,"avg_ptr25":11386,"plan_crm25":25000,"plan_sales25":11386,"remarks":""},{"hq":"Saharsa","name":"S.N YADAV","crm26":20000,"sales26":14000,"crm25_act":20000,"avg_ptr25":12248,"plan_crm25":20000,"plan_sales25":12248,"remarks":""},{"hq":"Saharsa","name":"SABANA KESSAR","crm26":60000,"sales26":32000,"crm25_act":60000,"avg_ptr25":30966,"plan_crm25":60000,"plan_sales25":30966,"remarks":""},{"hq":"Saharsa","name":"SANDHYA KUMARI","crm26":20000,"sales26":12000,"crm25_act":40000,"avg_ptr25":11517,"plan_crm25":40000,"plan_sales25":11517,"remarks":""},{"hq":"Saharsa","name":"SAROJ SINGH","crm26":20000,"sales26":12000,"crm25_act":40000,"avg_ptr25":11237,"plan_crm25":40000,"plan_sales25":11237,"remarks":""},{"hq":"Saharsa","name":"SMRITI KUMARI","crm26":25000,"sales26":16000,"crm25_act":20000,"avg_ptr25":16083,"plan_crm25":20000,"plan_sales25":16083,"remarks":""},{"hq":"Saharsa","name":"U.K RAJA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Saharsa","name":"RANJANA BHAGAT","crm26":25000,"sales26":15000,"crm25_act":25000,"avg_ptr25":6651,"plan_crm25":25000,"plan_sales25":6651,"remarks":""},{"hq":"Saharsa","name":"BHARTI JHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Saharsa","name":"PUNAM SINGH","crm26":25000,"sales26":13000,"crm25_act":25000,"avg_ptr25":10055,"plan_crm25":25000,"plan_sales25":10055,"remarks":""},{"hq":"Saharsa","name":"SANGEETA THAKUR","crm26":30000,"sales26":21000,"crm25_act":30000,"avg_ptr25":20451,"plan_crm25":30000,"plan_sales25":20451,"remarks":""},{"hq":"Saharsa","name":"RASHMI BHARTI","crm26":15000,"sales26":8000,"crm25_act":15000,"avg_ptr25":7453,"plan_crm25":15000,"plan_sales25":7453,"remarks":""},{"hq":"Saharsa","name":"LALLAN KUMAR","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":573,"plan_crm25":0,"plan_sales25":573,"remarks":""},{"hq":"Saharsa","name":"KOMAL GUPTA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Saharsa","name":"DR.SEEMA JHA","crm26":25000,"sales26":15000,"crm25_act":25000,"avg_ptr25":14347,"plan_crm25":25000,"plan_sales25":14347,"remarks":""},{"hq":"Saharsa","name":"MIHINAZ ALAM","crm26":20000,"sales26":12000,"crm25_act":20000,"avg_ptr25":10955,"plan_crm25":20000,"plan_sales25":10955,"remarks":""},{"hq":"Saharsa","name":"VINITA SHARMA","crm26":25000,"sales26":14000,"crm25_act":25000,"avg_ptr25":12112,"plan_crm25":25000,"plan_sales25":12112,"remarks":""},{"hq":"Saharsa","name":"POONAM KUMARI","crm26":20000,"sales26":10000,"crm25_act":20000,"avg_ptr25":8277,"plan_crm25":20000,"plan_sales25":8277,"remarks":""},{"hq":"Saharsa","name":"KALYANI SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Saharsa","name":"ALIYA PRWAEEN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"AMRITA SARAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"ANITA SAHYA","crm26":10000,"sales26":5000,"crm25_act":10000,"avg_ptr25":5023,"plan_crm25":10000,"plan_sales25":5023,"remarks":""},{"hq":"Patna-1","name":"DR SUSHMA SINHA","crm26":25000,"sales26":15000,"crm25_act":15000,"avg_ptr25":9914,"plan_crm25":15000,"plan_sales25":9914,"remarks":""},{"hq":"Patna-1","name":"DR. ARCHANA OJHA","crm26":50000,"sales26":30000,"crm25_act":30000,"avg_ptr25":21554,"plan_crm25":30000,"plan_sales25":21554,"remarks":""},{"hq":"Patna-1","name":"DR. NEENA AGARWAL","crm26":10000,"sales26":7000,"crm25_act":7500,"avg_ptr25":704,"plan_crm25":7500,"plan_sales25":704,"remarks":""},{"hq":"Patna-1","name":"DR.ANJU SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"DR.CHANCHAL SUMAN","crm26":30000,"sales26":18000,"crm25_act":20000,"avg_ptr25":10767,"plan_crm25":20000,"plan_sales25":10767,"remarks":""},{"hq":"Patna-1","name":"DR.KAMINI CHOUDHARY","crm26":25000,"sales26":12000,"crm25_act":25000,"avg_ptr25":11709,"plan_crm25":25000,"plan_sales25":11709,"remarks":""},{"hq":"Patna-1","name":"DR.MANJU GEETA MISHRA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"DR.MEERA SINGH","crm26":25000,"sales26":15000,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"DR.MOONA HASSAIN","crm26":15000,"sales26":10000,"crm25_act":15000,"avg_ptr25":9311,"plan_crm25":15000,"plan_sales25":9311,"remarks":""},{"hq":"Patna-1","name":"DR.RENU SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"DR.SHEELA VERMA","crm26":50000,"sales26":30000,"crm25_act":60000,"avg_ptr25":21225,"plan_crm25":60000,"plan_sales25":21225,"remarks":""},{"hq":"Patna-1","name":"DR.SHILPA","crm26":10000,"sales26":8000,"crm25_act":0,"avg_ptr25":4888,"plan_crm25":0,"plan_sales25":4888,"remarks":""},{"hq":"Patna-1","name":"GURIYA KUMARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"NAMITA SINHA","crm26":40000,"sales26":20000,"crm25_act":20000,"avg_ptr25":10140,"plan_crm25":20000,"plan_sales25":10140,"remarks":""},{"hq":"Patna-1","name":"REKHA PD","crm26":20000,"sales26":10000,"crm25_act":10000,"avg_ptr25":3487,"plan_crm25":10000,"plan_sales25":3487,"remarks":""},{"hq":"Patna-1","name":"REKHA SINHA","crm26":25000,"sales26":12000,"crm25_act":10000,"avg_ptr25":3798,"plan_crm25":10000,"plan_sales25":3798,"remarks":""},{"hq":"Patna-1","name":"SUCHITRA CHOUDHARY","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"SUMAN BALA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"SUMAN SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"USHA DIDWANIA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":878,"plan_crm25":0,"plan_sales25":878,"remarks":""},{"hq":"Patna-1","name":"PRIYANKA 2","crm26":25000,"sales26":12000,"crm25_act":30000,"avg_ptr25":11661,"plan_crm25":30000,"plan_sales25":11661,"remarks":""},{"hq":"Patna-1","name":"VINITA SINGH","crm26":50000,"sales26":25000,"crm25_act":30000,"avg_ptr25":20644,"plan_crm25":30000,"plan_sales25":20644,"remarks":""},{"hq":"Patna-1","name":"MALTI ROY","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"MIRA SINGH","crm26":25000,"sales26":15000,"crm25_act":0,"avg_ptr25":2473,"plan_crm25":0,"plan_sales25":2473,"remarks":""},{"hq":"Patna-1","name":"SHANTI SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"MALINI SINHA","crm26":20000,"sales26":11000,"crm25_act":0,"avg_ptr25":3062,"plan_crm25":0,"plan_sales25":3062,"remarks":""},{"hq":"Patna-1","name":"MANJU AGARWAL","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"GEETA SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"BARUN KUMAR SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":838,"plan_crm25":0,"plan_sales25":838,"remarks":""},{"hq":"Patna-1","name":"NEELKANTH  IVF","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":820,"plan_crm25":0,"plan_sales25":820,"remarks":""},{"hq":"Patna-1","name":"N.K BAIDYA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"MADHU KIRAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"VINAY PD","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"MEENA KUMARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-1","name":"MINI ANAND","crm26":50000,"sales26":25000,"crm25_act":25000,"avg_ptr25":12498,"plan_crm25":25000,"plan_sales25":12498,"remarks":"Moved from Patna-2"},{"hq":"Patna-2","name":"DR. M.A RASHEED","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":629,"plan_crm25":0,"plan_sales25":629,"remarks":""},{"hq":"Patna-2","name":"DR.MADHURI SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"DR.MALTI SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"DR.MANJU BHADANI","crm26":30000,"sales26":20000,"crm25_act":15000,"avg_ptr25":11120,"plan_crm25":15000,"plan_sales25":11120,"remarks":""},{"hq":"Patna-2","name":"DR.SABNAM BANO","crm26":20000,"sales26":12000,"crm25_act":20000,"avg_ptr25":11495,"plan_crm25":20000,"plan_sales25":11495,"remarks":""},{"hq":"Patna-2","name":"DR.SANJEEV KUMAR","crm26":20000,"sales26":11000,"crm25_act":20000,"avg_ptr25":8779,"plan_crm25":20000,"plan_sales25":8779,"remarks":""},{"hq":"Patna-2","name":"DR.SUNITI SINHA","crm26":30000,"sales26":15000,"crm25_act":20000,"avg_ptr25":12203,"plan_crm25":20000,"plan_sales25":12203,"remarks":""},{"hq":"Patna-2","name":"DR.USHA UPADHAYA","crm26":20000,"sales26":12000,"crm25_act":20000,"avg_ptr25":11703,"plan_crm25":20000,"plan_sales25":11703,"remarks":""},{"hq":"Patna-2","name":"DR.V.B GOLWARA","crm26":50000,"sales26":30000,"crm25_act":50000,"avg_ptr25":15378,"plan_crm25":50000,"plan_sales25":15378,"remarks":""},{"hq":"Patna-2","name":"HEENA RANI DEVNATH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"RAKHI RANI","crm26":50000,"sales26":25000,"crm25_act":20000,"avg_ptr25":13122,"plan_crm25":20000,"plan_sales25":13122,"remarks":""},{"hq":"Patna-2","name":"RANJANA PANDEY","crm26":50000,"sales26":30000,"crm25_act":15000,"avg_ptr25":11357,"plan_crm25":15000,"plan_sales25":11357,"remarks":""},{"hq":"Patna-2","name":"SHANTI H.K SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"SHANTI ROY","crm26":10000,"sales26":8000,"crm25_act":0,"avg_ptr25":6779,"plan_crm25":0,"plan_sales25":6779,"remarks":""},{"hq":"Patna-2","name":"SUSHMA PANDEY","crm26":30000,"sales26":15000,"crm25_act":30000,"avg_ptr25":12724,"plan_crm25":30000,"plan_sales25":12724,"remarks":""},{"hq":"Patna-2","name":"VANDANA VERMA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"PRABHA SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"SAHIDA SULTAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"RITA SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"DR.SALMA KHATOON","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"DR.PREM LATA SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"ANITA SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"SUSHMA SARAN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"KIRAN KUMARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":677,"plan_crm25":0,"plan_sales25":677,"remarks":""},{"hq":"Patna-2","name":"R.N SINGH","crm26":50000,"sales26":25000,"crm25_act":50000,"avg_ptr25":25322,"plan_crm25":50000,"plan_sales25":25322,"remarks":""},{"hq":"Patna-2","name":"LAXMI JHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":418,"plan_crm25":0,"plan_sales25":418,"remarks":""},{"hq":"Patna-2","name":"RATANSHEELA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"SUSHMA SINHA-2","crm26":50000,"sales26":30000,"crm25_act":51375,"avg_ptr25":26670,"plan_crm25":51375,"plan_sales25":26670,"remarks":""},{"hq":"Patna-2","name":"SARJEEL RASHEED","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-2","name":"REKHA SINGH","crm26":50000,"sales26":28000,"crm25_act":20000,"avg_ptr25":16458,"plan_crm25":20000,"plan_sales25":16458,"remarks":""},{"hq":"Patna-3","name":"AMITA BHARTI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"ANITA KUMARI","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"ANITA SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"DR SUPRIYA JAISWAL","crm26":25000,"sales26":15000,"crm25_act":25000,"avg_ptr25":14054,"plan_crm25":25000,"plan_sales25":14054,"remarks":""},{"hq":"Patna-3","name":"DR.BHARAT SINGH","crm26":20000,"sales26":10000,"crm25_act":20000,"avg_ptr25":7733,"plan_crm25":20000,"plan_sales25":7733,"remarks":""},{"hq":"Patna-3","name":"DR.NISHITA SINHA","crm26":100000,"sales26":40000,"crm25_act":50000,"avg_ptr25":20396,"plan_crm25":50000,"plan_sales25":20396,"remarks":""},{"hq":"Patna-3","name":"DR.NUTAN NARAIN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"DR.RASHMI PD","crm26":100000,"sales26":40000,"crm25_act":50000,"avg_ptr25":23869,"plan_crm25":50000,"plan_sales25":23869,"remarks":""},{"hq":"Patna-3","name":"DR.SARITA SINHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"DR.VIBHASANI PD","crm26":60000,"sales26":25000,"crm25_act":30000,"avg_ptr25":15131,"plan_crm25":30000,"plan_sales25":15131,"remarks":""},{"hq":"Patna-3","name":"HEMA NARAIN","crm26":40000,"sales26":15000,"crm25_act":20000,"avg_ptr25":8515,"plan_crm25":20000,"plan_sales25":8515,"remarks":""},{"hq":"Patna-3","name":"MADHUBALA SINHA","crm26":15000,"sales26":9000,"crm25_act":15000,"avg_ptr25":8529,"plan_crm25":15000,"plan_sales25":8529,"remarks":""},{"hq":"Patna-3","name":"MEERA JHA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"NEELAM","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":820,"plan_crm25":0,"plan_sales25":820,"remarks":""},{"hq":"Patna-3","name":"NILIMA PANDEY","crm26":0,"sales26":0,"crm25_act":20000,"avg_ptr25":4086,"plan_crm25":20000,"plan_sales25":4086,"remarks":""},{"hq":"Patna-3","name":"NUTAN ANAND","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":820,"plan_crm25":0,"plan_sales25":820,"remarks":""},{"hq":"Patna-3","name":"SANGEETA GUPTA","crm26":0,"sales26":0,"crm25_act":20000,"avg_ptr25":8630,"plan_crm25":20000,"plan_sales25":8630,"remarks":""},{"hq":"Patna-3","name":"SAVITA RUNGTA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"TANIMA SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":1156,"plan_crm25":0,"plan_sales25":1156,"remarks":""},{"hq":"Patna-3","name":"DIPANJEETA","crm26":20000,"sales26":8000,"crm25_act":0,"avg_ptr25":677,"plan_crm25":0,"plan_sales25":677,"remarks":""},{"hq":"Patna-3","name":"N.P NARAIN","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"SANGEETA SINGH","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":1761,"plan_crm25":0,"plan_sales25":1761,"remarks":""},{"hq":"Patna-3","name":"LEELA SINHA","crm26":25000,"sales26":15000,"crm25_act":0,"avg_ptr25":6866,"plan_crm25":0,"plan_sales25":6866,"remarks":""},{"hq":"Patna-3","name":"MADHU SINHA","crm26":25000,"sales26":15000,"crm25_act":0,"avg_ptr25":5611,"plan_crm25":0,"plan_sales25":5611,"remarks":""},{"hq":"Patna-3","name":"NIDHI RANI","crm26":15000,"sales26":8000,"crm25_act":15000,"avg_ptr25":7138,"plan_crm25":15000,"plan_sales25":7138,"remarks":""},{"hq":"Patna-3","name":"KAVITA","crm26":30000,"sales26":15000,"crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"remarks":""},{"hq":"Patna-3","name":"MAMTA","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":439,"plan_crm25":0,"plan_sales25":439,"remarks":""},{"hq":"Patna-3","name":"KHUSHBOO(MANAT IVF)","crm26":0,"sales26":0,"crm25_act":0,"avg_ptr25":338,"plan_crm25":0,"plan_sales25":338,"remarks":""},{"hq":"Patna-3","name":"DR. POONAM SINGH","crm26":25000,"sales26":16000,"crm25_act":40000,"avg_ptr25":16085,"plan_crm25":40000,"plan_sales25":16085,"remarks":"Moved from Patna-2"}];
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
 /* ══════════════════════════════════════════════════════
    CONSTANTS
 ══════════════════════════════════════════════════════ */
+const APP_VERSION = "v1.2";
+const MONTHS  = ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
+const YEARS   = ["FY 2025-26","FY 2026-27","FY 2027-28"];
 const HQ_LIST = ["Siwan","Bettiah","Darbhanga","Muzaffarpur","Begusarai","Purnea","Saharsa","Patna-1","Patna-2","Patna-3"];
 const ASM_MAP = {
   "Siwan":"ASM Darbhanga","Bettiah":"ASM Darbhanga","Darbhanga":"ASM Darbhanga","Muzaffarpur":"ASM Darbhanga",
@@ -53,171 +49,183 @@ const HQ_PLAN = {
   "Patna-1":505000,"Patna-2":460000,"Patna-3":500000
 };
 const BIHAR_TOTAL = 4950000;
-const MONTHS = ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
-const YEARS  = ["FY 2025-26","FY 2026-27","FY 2027-28"];
-const APP_VERSION = "v1.1";
 const STATUSES = {PROPOSED:"Proposed",APPROVED:"Approved",CONFIRMED:"Confirmed"};
 const STATUS_COLORS = {
-  Proposed:  {bg:"bg-amber-100",  text:"text-amber-700",  dot:"bg-amber-500"},
-  Approved:  {bg:"bg-blue-100",   text:"text-blue-700",   dot:"bg-blue-500"},
-  Confirmed: {bg:"bg-emerald-100",text:"text-emerald-700",dot:"bg-emerald-500"},
+  Proposed: {bg:"bg-amber-100", text:"text-amber-700"},
+  Approved: {bg:"bg-blue-100",  text:"text-blue-700"},
+  Confirmed:{bg:"bg-emerald-100",text:"text-emerald-700"},
 };
-const ROLES = {ZSM:"zsm",ADMIN:"admin"};
 const CREDS = {"zsm@aldan":"zsm","admin@aldan":"admin"};
-const CURRENT_YEAR = "FY 2025-26";
+const curMonth = () => MONTHS[new Date().getMonth()];
+
+/* PTR price list (PTS from v1.7 price master) */
+const PTR_MAP = {
+  "ALDANVIT":106.32,"ALDANVIT TABS":106.32,
+  "ALDOVA":362.75,"ALDOVA KIT":362.75,"ALDOVA KIT TABS":362.75,
+  "ALDOVA DS":449.68,"ALDOVA DS KIT":449.68,"ALDOVA DS KIT TABS":449.68,"ALDOVA-DS":449.68,
+  "OSTEOFEM":325.22,"OSTEOFEM TABS":325.22,
+  "LACORIA":297.08,"LACORIA CAPS":297.08,
+  "LOQ 10 PLUS":352.11,"LOQ 10 PLUS CAPS":352.11,"LOQ10PLUS":352.11,
+  "MYOLIFE":171.37,"MYOLIFE TABS":171.37,
+  "MYOLIFE PLUS":222.65,"MYOLIFE PLUS TABS":222.65,
+  "MYO GDM":218.27,"MYO GDM TABS":218.27,
+  "UTILAC":217.02,"UTILAC CAPS":217.02,
+  "OVALUX":856.21,"OVALUX CAPS":856.21,
+  "ARGILUX":687.97,"ARGILUX SACHETS":687.97,
+};
+
+const getPTR = (productName) => {
+  if (!productName) return 0;
+  const upper = productName.toString().toUpperCase().trim();
+  // exact match first
+  for (const [k,v] of Object.entries(PTR_MAP)) {
+    if (upper === k.toUpperCase()) return v;
+  }
+  // partial match
+  for (const [k,v] of Object.entries(PTR_MAP)) {
+    if (upper.includes(k.toUpperCase()) || k.toUpperCase().includes(upper)) return v;
+  }
+  return 0;
+};
+
+/* ══════════════════════════════════════════════════════
+   DOCTOR MASTER (252 doctors from v1.7 CRM Data sheet)
+══════════════════════════════════════════════════════ */
+const DOCTOR_MASTER = [{"hq":"Siwan","name":"AKHOURI URMILA","crm25_act":20000,"avg_ptr25":15000,"plan_crm25":20000,"plan_sales25":12468,"crm26":20000,"sales26":15000,"remarks":""},{"hq":"Siwan","name":"BINOD KUMARI SHARMA","crm25_act":30000,"avg_ptr25":10038,"plan_crm25":30000,"plan_sales25":10038,"crm26":0,"sales26":0,"remarks":""},{"hq":"Siwan","name":"DR.ANAMIKA SHARMA","crm25_act":0,"avg_ptr25":9578,"plan_crm25":0,"plan_sales25":9578,"crm26":30000,"sales26":20000,"remarks":""},{"hq":"Siwan","name":"DR.MITALI KUMARI","crm25_act":20000,"avg_ptr25":12731,"plan_crm25":20000,"plan_sales25":12731,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Siwan","name":"DR.NIDHI SORI","crm25_act":25000,"avg_ptr25":14015,"plan_crm25":25000,"plan_sales25":14015,"crm26":25000,"sales26":14000,"remarks":""},{"hq":"Siwan","name":"DR.RENU KASHYAP","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Siwan","name":"DR.WORTIKA KESARI","crm25_act":10000,"avg_ptr25":5000,"plan_crm25":10000,"plan_sales25":5000,"crm26":10000,"sales26":5000,"remarks":""},{"hq":"Siwan","name":"MANJU SINGH","crm25_act":100000,"avg_ptr25":50000,"plan_crm25":100000,"plan_sales25":50000,"crm26":100000,"sales26":60000,"remarks":""},{"hq":"Siwan","name":"R.KIRAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Siwan","name":"R.TABASSUM","crm25_act":30000,"avg_ptr25":20000,"plan_crm25":30000,"plan_sales25":20000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Siwan","name":"RITA SINHA","crm25_act":30000,"avg_ptr25":20000,"plan_crm25":30000,"plan_sales25":20000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Siwan","name":"ZEBA PRAVEEN","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Siwan","name":"KAUSHAR JAHAN","crm25_act":25000,"avg_ptr25":12000,"plan_crm25":25000,"plan_sales25":12000,"crm26":0,"sales26":0,"remarks":""},{"hq":"Siwan","name":"MANISHA SINGH","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Siwan","name":"RANJITA SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Siwan","name":"KALPANA SHARMA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Siwan","name":"SUMAN KUMARI","crm25_act":0,"avg_ptr25":5000,"plan_crm25":0,"plan_sales25":5000,"crm26":20000,"sales26":10000,"remarks":""},{"hq":"Bettiah","name":"ABHILASHA JHA","crm25_act":15000,"avg_ptr25":8000,"plan_crm25":15000,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Bettiah","name":"DR KAUSHALYA KESARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"DR KUMKUM SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"DR POONAM SINHA","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Bettiah","name":"DR.MANJU CHOUDHARY","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":30000,"sales26":20000,"remarks":""},{"hq":"Bettiah","name":"DR.MIRA CHOUDHARY","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Bettiah","name":"SEEMA GIRI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"TAHERA TABASSUM","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Bettiah","name":"SHEETAL NARULA","crm25_act":0,"avg_ptr25":5000,"plan_crm25":0,"plan_sales25":5000,"crm26":15000,"sales26":8000,"remarks":""},{"hq":"Bettiah","name":"SHIKHA PANDEY","crm25_act":0,"avg_ptr25":5000,"plan_crm25":0,"plan_sales25":5000,"crm26":15000,"sales26":8000,"remarks":""},{"hq":"Bettiah","name":"REENA RANI","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Bettiah","name":"SUDHA CHANDRA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"JYOTI JHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"C.L JHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"PHOOL KUMARI SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"SWASTI SINHA","crm25_act":0,"avg_ptr25":15000,"plan_crm25":0,"plan_sales25":15000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Bettiah","name":"DEBASIS CHATERJEE","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"BRIJBIHARI PD","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Bettiah","name":"DR.VINCY","crm25_act":50000,"avg_ptr25":30000,"plan_crm25":50000,"plan_sales25":30000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Bettiah","name":"DR. MUNDITA JAISWAL","crm25_act":0,"avg_ptr25":15000,"plan_crm25":0,"plan_sales25":15000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Darbhanga","name":"DR MINA MAHASETH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Darbhanga","name":"DR.HINA ARZOO","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":30000,"sales26":20000,"remarks":""},{"hq":"Darbhanga","name":"DR.KUMUDINI JHA","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":30000,"sales26":20000,"remarks":""},{"hq":"Darbhanga","name":"DR.NUTAN RAI","crm25_act":0,"avg_ptr25":15000,"plan_crm25":0,"plan_sales25":15000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Darbhanga","name":"SHRADHA THAKUR","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Darbhanga","name":"DR.GUNJAN TRIVEDI","crm25_act":90000,"avg_ptr25":50000,"plan_crm25":90000,"plan_sales25":50000,"crm26":60000,"sales26":40000,"remarks":""},{"hq":"Darbhanga","name":"SHILA SAHU","crm25_act":15000,"avg_ptr25":8000,"plan_crm25":15000,"plan_sales25":8000,"crm26":15000,"sales26":8000,"remarks":""},{"hq":"Darbhanga","name":"USHA JHA","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Darbhanga","name":"DR.POONAM SINGH DB","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Darbhanga","name":"SHILPI NARAIN SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Darbhanga","name":"PUSHPA RANI","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Darbhanga","name":"PUJA MAHASETH","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Darbhanga","name":"RENU RANA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Darbhanga","name":"ASHA KUMARI","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Darbhanga","name":"PRATIBHA KUMARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Darbhanga","name":"GEETA BHARTI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Darbhanga","name":"SRI SABBA","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Darbhanga","name":"NUTAN BALA SINGH","crm25_act":7500,"avg_ptr25":5000,"plan_crm25":7500,"plan_sales25":5000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Muzaffarpur","name":"ANJU SINGH 2","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Muzaffarpur","name":"Dr Prabhash kumar","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Muzaffarpur","name":"DR.BHARTI TIWARI","crm25_act":0,"avg_ptr25":12000,"plan_crm25":0,"plan_sales25":12000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Muzaffarpur","name":"DR.LATA GUPTA","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Muzaffarpur","name":"DR.SABNAM","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Muzaffarpur","name":"NIBHA","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Muzaffarpur","name":"PRATIMA ANAND","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"RANJANA KUMARI","crm25_act":10000,"avg_ptr25":6000,"plan_crm25":10000,"plan_sales25":6000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Muzaffarpur","name":"RITA CHOUDHARY","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Muzaffarpur","name":"SHOBHA RANI MISHRA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"SUNITA KUMARI","crm25_act":10000,"avg_ptr25":6000,"plan_crm25":10000,"plan_sales25":6000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Muzaffarpur","name":"SWEATA KUMARI","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Muzaffarpur","name":"SANGEETA JHA","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Muzaffarpur","name":"RAJNI SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"SITARAM PD SINGH","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":15000,"sales26":9000,"remarks":""},{"hq":"Muzaffarpur","name":"DIPTI SINGH","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Muzaffarpur","name":"KULDEEP KAUR","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Muzaffarpur","name":"RANJANA MISHRA","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Muzaffarpur","name":"ASFA KHAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"RANGEELA SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"KANCHAN KUMAR","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"ANJANA PRAKASH","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Muzaffarpur","name":"DR.VINITA TIWARY","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"KARUNA OJHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Muzaffarpur","name":"DR.NISHI BALA","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Begusarai","name":"CHANDRAHASH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"DR. MINI KUMARI","crm25_act":20000,"avg_ptr25":14000,"plan_crm25":20000,"plan_sales25":14000,"crm26":20000,"sales26":10000,"remarks":""},{"hq":"Begusarai","name":"DR.EKTA KUMARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"DR.LEENA KUMARI","crm25_act":20000,"avg_ptr25":14000,"plan_crm25":20000,"plan_sales25":14000,"crm26":30000,"sales26":20000,"remarks":""},{"hq":"Begusarai","name":"MANJU CHOUHAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"NIVEDITA KUMARI","crm25_act":20000,"avg_ptr25":14000,"plan_crm25":20000,"plan_sales25":14000,"crm26":20000,"sales26":14000,"remarks":""},{"hq":"Begusarai","name":"PRAGYA SINGH","crm25_act":40000,"avg_ptr25":28000,"plan_crm25":40000,"plan_sales25":28000,"crm26":100000,"sales26":60000,"remarks":""},{"hq":"Begusarai","name":"PREMLATA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"RANJANA SINHA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Begusarai","name":"RUPA SINGH","crm25_act":50000,"avg_ptr25":35000,"plan_crm25":50000,"plan_sales25":35000,"crm26":100000,"sales26":60000,"remarks":""},{"hq":"Begusarai","name":"SANGEETA SINHA","crm25_act":0,"avg_ptr25":15000,"plan_crm25":0,"plan_sales25":15000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Begusarai","name":"SANGEETHA RAJAN","crm25_act":25000,"avg_ptr25":18000,"plan_crm25":25000,"plan_sales25":18000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Begusarai","name":"SARIKA SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"UMA KUMARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"RAJKISHORI SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"VINITA SINHA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Begusarai","name":"SHASHI PRABHA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Begusarai","name":"DR.RAJNI KUMARI","crm25_act":30000,"avg_ptr25":20000,"plan_crm25":30000,"plan_sales25":20000,"crm26":30000,"sales26":20000,"remarks":""},{"hq":"Begusarai","name":"R.N JAIN","crm25_act":0,"avg_ptr25":15000,"plan_crm25":0,"plan_sales25":15000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Begusarai","name":"K.K SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"ANITA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Begusarai","name":"KAMINI","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Begusarai","name":"NIVEDITA KASHYAP","crm25_act":20000,"avg_ptr25":14000,"plan_crm25":20000,"plan_sales25":14000,"crm26":20000,"sales26":14000,"remarks":""},{"hq":"Begusarai","name":"SURESH PRASAD","crm25_act":15000,"avg_ptr25":10000,"plan_crm25":15000,"plan_sales25":10000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Begusarai","name":"HARI PRIYA","crm25_act":25000,"avg_ptr25":18000,"plan_crm25":25000,"plan_sales25":18000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Purnea","name":"APARNA DEY","crm25_act":30000,"avg_ptr25":20000,"plan_crm25":30000,"plan_sales25":20000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Purnea","name":"DR.BHARTI SINHA","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Purnea","name":"DR.N.K MISHRA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"DR.NIDHI RANI","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Purnea","name":"DR.PRIYANKA JHA","crm25_act":200000,"avg_ptr25":120000,"plan_crm25":200000,"plan_sales25":120000,"crm26":200000,"sales26":120000,"remarks":""},{"hq":"Purnea","name":"DR.RESHMA ALI","crm25_act":100000,"avg_ptr25":60000,"plan_crm25":100000,"plan_sales25":60000,"crm26":120000,"sales26":70000,"remarks":""},{"hq":"Purnea","name":"DR.S. NIRANJAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"MEERA SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"NIDHI PD","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"NIKHAT FATMA","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Purnea","name":"NOOR AKHTAR","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"PAYAL ANAND","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"RANJANA JHA","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Purnea","name":"RENUKA SINGH","crm25_act":60000,"avg_ptr25":38000,"plan_crm25":60000,"plan_sales25":38000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Purnea","name":"S.NIRANJAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"S.TABASSUM","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Purnea","name":"SEEMA MISHRA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"VIBHA JHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"SHIVANI SINGH","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Purnea","name":"MADIHA KESSAR","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Purnea","name":"SHALINI PD","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Purnea","name":"NUZRAT J.ATHAR","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Purnea","name":"ANJU HARSH","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Purnea","name":"ARTI SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"SAHINA TANVIR","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Purnea","name":"AJAY KUMAR SINGH","crm25_act":0,"avg_ptr25":5000,"plan_crm25":0,"plan_sales25":5000,"crm26":15000,"sales26":8000,"remarks":""},{"hq":"Saharsa","name":"HINA FAROOKI","crm25_act":50000,"avg_ptr25":30000,"plan_crm25":50000,"plan_sales25":30000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"KARUNA SHANKER","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Saharsa","name":"NAIDU KUMARI","crm25_act":70000,"avg_ptr25":45000,"plan_crm25":70000,"plan_sales25":45000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Saharsa","name":"RANJESH KR SINGH","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"S.K ISSAR","crm25_act":10000,"avg_ptr25":6000,"plan_crm25":10000,"plan_sales25":6000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Saharsa","name":"S.N THAKUR","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"S.N YADAV","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Saharsa","name":"SABANA KESSAR","crm25_act":60000,"avg_ptr25":38000,"plan_crm25":60000,"plan_sales25":38000,"crm26":60000,"sales26":38000,"remarks":""},{"hq":"Saharsa","name":"SANDHYA KUMARI","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Saharsa","name":"SAROJ SINGH","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Saharsa","name":"SMRITI KUMARI","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"U.K RAJA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Saharsa","name":"RANJANA BHAGAT","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"BHARTI JHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Saharsa","name":"PUNAM SINGH","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"SANGEETA THAKUR","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Saharsa","name":"RASHMI BHARTI","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":15000,"sales26":9000,"remarks":""},{"hq":"Saharsa","name":"LALLAN KUMAR","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Saharsa","name":"KOMAL GUPTA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Saharsa","name":"DR.SEEMA JHA","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"MIHINAZ ALAM","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Saharsa","name":"VINITA SHARMA","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Saharsa","name":"POONAM KUMARI","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Saharsa","name":"KALYANI SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Saharsa","name":"ALIYA PRWAEEN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"AMRITA SARAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"ANITA SAHYA","crm25_act":10000,"avg_ptr25":6000,"plan_crm25":10000,"plan_sales25":6000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Patna-1","name":"DR SUSHMA SINHA","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-1","name":"DR. ARCHANA OJHA","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-1","name":"DR. NEENA AGARWAL","crm25_act":7500,"avg_ptr25":5000,"plan_crm25":7500,"plan_sales25":5000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Patna-1","name":"DR.ANJU SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"DR.CHANCHAL SUMAN","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Patna-1","name":"DR.KAMINI CHOUDHARY","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-1","name":"DR.MANJU GEETA MISHRA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"DR.MEERA SINGH","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-1","name":"DR.MOONA HASSAIN","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":15000,"sales26":9000,"remarks":""},{"hq":"Patna-1","name":"DR.RENU SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"DR.SHEELA VERMA","crm25_act":60000,"avg_ptr25":38000,"plan_crm25":60000,"plan_sales25":38000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-1","name":"DR.SHILPA","crm25_act":0,"avg_ptr25":5000,"plan_crm25":0,"plan_sales25":5000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Patna-1","name":"GURIYA KUMARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"NAMITA SINHA","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Patna-1","name":"REKHA PD","crm25_act":10000,"avg_ptr25":6000,"plan_crm25":10000,"plan_sales25":6000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Patna-1","name":"REKHA SINHA","crm25_act":10000,"avg_ptr25":6000,"plan_crm25":10000,"plan_sales25":6000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-1","name":"SUCHITRA CHOUDHARY","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"SUMAN BALA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"SUMAN SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"USHA DIDWANIA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"PRIYANKA 2","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-1","name":"VINITA SINGH","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-1","name":"MALTI ROY","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"MIRA SINGH","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-1","name":"SHANTI SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"MALINI SINHA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Patna-1","name":"MANJU AGARWAL","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"GEETA SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"BARUN KUMAR SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"NEELKANTH  IVF","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"N.K BAIDYA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"MADHU KIRAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"VINAY PD","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"MEENA KUMARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-1","name":"MINI ANAND","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-2","name":"DR. M.A RASHEED","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"DR.MADHURI SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"DR.MALTI SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"DR.MANJU BHADANI","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Patna-2","name":"DR.SABNAM BANO","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Patna-2","name":"DR.SANJEEV KUMAR","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Patna-2","name":"DR.SUNITI SINHA","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Patna-2","name":"DR.USHA UPADHAYA","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Patna-2","name":"DR.V.B GOLWARA","crm25_act":50000,"avg_ptr25":30000,"plan_crm25":50000,"plan_sales25":30000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-2","name":"HEENA RANI DEVNATH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"RAKHI RANI","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-2","name":"RANJANA PANDEY","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-2","name":"SHANTI H.K SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"SHANTI ROY","crm25_act":0,"avg_ptr25":5000,"plan_crm25":0,"plan_sales25":5000,"crm26":10000,"sales26":6000,"remarks":""},{"hq":"Patna-2","name":"SUSHMA PANDEY","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Patna-2","name":"VANDANA VERMA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"PRABHA SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"SAHIDA SULTAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"RITA SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"DR.SALMA KHATOON","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"DR.PREM LATA SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"ANITA SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"SUSHMA SARAN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"KIRAN KUMARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"R.N SINGH","crm25_act":50000,"avg_ptr25":30000,"plan_crm25":50000,"plan_sales25":30000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-2","name":"LAXMI JHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"RATANSHEELA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"SUSHMA SINHA-2","crm25_act":51375,"avg_ptr25":30000,"plan_crm25":51375,"plan_sales25":30000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-2","name":"SARJEEL RASHEED","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-2","name":"REKHA SINGH","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":50000,"sales26":30000,"remarks":""},{"hq":"Patna-3","name":"AMITA BHARTI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"ANITA KUMARI","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"ANITA SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"DR SUPRIYA JAISWAL","crm25_act":25000,"avg_ptr25":15000,"plan_crm25":25000,"plan_sales25":15000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-3","name":"DR.BHARAT SINGH","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Patna-3","name":"DR.NISHITA SINHA","crm25_act":50000,"avg_ptr25":30000,"plan_crm25":50000,"plan_sales25":30000,"crm26":100000,"sales26":60000,"remarks":""},{"hq":"Patna-3","name":"DR.NUTAN NARAIN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"DR.RASHMI PD","crm25_act":50000,"avg_ptr25":30000,"plan_crm25":50000,"plan_sales25":30000,"crm26":100000,"sales26":60000,"remarks":""},{"hq":"Patna-3","name":"DR.SARITA SINHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"DR.VIBHASANI PD","crm25_act":30000,"avg_ptr25":18000,"plan_crm25":30000,"plan_sales25":18000,"crm26":60000,"sales26":38000,"remarks":""},{"hq":"Patna-3","name":"HEMA NARAIN","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":40000,"sales26":25000,"remarks":""},{"hq":"Patna-3","name":"MADHUBALA SINHA","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":15000,"sales26":9000,"remarks":""},{"hq":"Patna-3","name":"MEERA JHA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"NEELAM","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"NILIMA PANDEY","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"NUTAN ANAND","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"SANGEETA GUPTA","crm25_act":20000,"avg_ptr25":12000,"plan_crm25":20000,"plan_sales25":12000,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"SAVITA RUNGTA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"TANIMA SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"DIPANJEETA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":20000,"sales26":12000,"remarks":""},{"hq":"Patna-3","name":"N.P NARAIN","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"SANGEETA SINGH","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"LEELA SINHA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-3","name":"MADHU SINHA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":25000,"sales26":15000,"remarks":""},{"hq":"Patna-3","name":"NIDHI RANI","crm25_act":15000,"avg_ptr25":9000,"plan_crm25":15000,"plan_sales25":9000,"crm26":15000,"sales26":9000,"remarks":""},{"hq":"Patna-3","name":"KAVITA","crm25_act":0,"avg_ptr25":8000,"plan_crm25":0,"plan_sales25":8000,"crm26":30000,"sales26":18000,"remarks":""},{"hq":"Patna-3","name":"MAMTA","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"KHUSHBOO(MANAT IVF)","crm25_act":0,"avg_ptr25":0,"plan_crm25":0,"plan_sales25":0,"crm26":0,"sales26":0,"remarks":""},{"hq":"Patna-3","name":"DR. POONAM SINGH","crm25_act":40000,"avg_ptr25":25000,"plan_crm25":40000,"plan_sales25":25000,"crm26":25000,"sales26":15000,"remarks":""}];
 
 /* ══════════════════════════════════════════════════════
    HELPERS
 ══════════════════════════════════════════════════════ */
 const uid   = () => Math.random().toString(36).slice(2,9);
 const inr   = (n) => "₹"+Number(n||0).toLocaleString("en-IN");
-const inrL  = (n) => (n/100000).toFixed(2)+"L";
+const inrL  = (n) => (Number(n||0)/100000).toFixed(2)+"L";
 const toArr = (v) => { if(!v)return[]; if(Array.isArray(v))return v.filter(Boolean); if(typeof v==="object")return Object.values(v).filter(Boolean); return[]; };
 const now   = () => new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
-const curMonth = () => MONTHS[new Date().getMonth()];
+const pct   = (a,p) => p>0 ? Math.round(a/p*100) : null;
+
+const achColor = (p) => {
+  if (p === null) return "";
+  if (p >= 100) return "bg-purple-100 text-purple-700";
+  if (p >= 90)  return "bg-emerald-100 text-emerald-700";
+  if (p >= 80)  return "bg-blue-100 text-blue-700";
+  return "bg-red-100 text-red-600";
+};
+const achLabel = (p) => {
+  if (p === null) return "";
+  if (p >= 100) return "🏆 Exceptional";
+  if (p >= 90)  return "🌟 Excellent";
+  if (p >= 80)  return "✅ Good";
+  return "⚠️ Below";
+};
 
 /* ══════════════════════════════════════════════════════
    MAIN APP
 ══════════════════════════════════════════════════════ */
 function App() {
-  const [user,     setUser]     = useState(null); // {email, role}
-  const [view,     setView]     = useState("dashboard");
-  const [proposals,setProposals]= useState({}); // keyed by proposalId
-  const [loaded,   setLoaded]   = useState(false);
-  const [syncSt,   setSyncSt]   = useState("connecting");
-  const [toast,    setToast]    = useState(null);
-  const [modal,    setModal]    = useState(null);
-  const [confirm,  setConfirm]  = useState(null);
-  // Login state
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPwd,   setLoginPwd]   = useState("");
-  const [loginErr,   setLoginErr]   = useState("");
+  const [user,      setUser]      = useState(null);
+  const [view,      setView]      = useState("dashboard");
+  const [proposals, setProposals] = useState({});
+  const [salesData, setSalesData] = useState({});  // {year: {doctorKey: {month: value}}}
+  const [loaded,    setLoaded]    = useState(false);
+  const [syncSt,    setSyncSt]    = useState("connecting");
+  const [toast,     setToast]     = useState(null);
+  const [confirm,   setConfirm]   = useState(null);
+  const [loginEmail,setLoginEmail]= useState("");
+  const [loginPwd,  setLoginPwd]  = useState("");
+  const [loginErr,  setLoginErr]  = useState("");
 
-  /* ── Firebase listener ── */
   useEffect(() => {
-    const ref = DB.ref(DB_PATH+"/proposals");
+    const ref = DB.ref(DB_PATH);
     ref.on("value", snap => {
-      const raw = snap.val();
-      setProposals(raw || {});
+      const raw = snap.val() || {};
+      setProposals(raw.proposals || {});
+      setSalesData(raw.salesData || {});
       setLoaded(true);
       setSyncSt("synced");
     }, () => { setSyncSt("error"); setLoaded(true); });
     return () => ref.off();
   }, []);
 
-  const save = (path, data) => {
+  const saveProposal = (path, data) => {
     setSyncSt("saving");
-    DB.ref(DB_PATH+"/proposals/"+path).set(data)
-      .then(()=>setSyncSt("synced"))
-      .catch(()=>setSyncSt("error"));
+    DB.ref(DB_PATH+"/proposals/"+path).set(data).then(()=>setSyncSt("synced")).catch(()=>setSyncSt("error"));
   };
-  const saveAll = (data) => {
+  const saveSalesData = (data) => {
     setSyncSt("saving");
-    DB.ref(DB_PATH+"/proposals").set(data)
-      .then(()=>setSyncSt("synced"))
-      .catch(()=>setSyncSt("error"));
+    DB.ref(DB_PATH+"/salesData").set(data).then(()=>setSyncSt("synced")).catch(()=>setSyncSt("error"));
   };
 
   const notify = (msg, c="green") => { setToast({msg,c}); setTimeout(()=>setToast(null),2800); };
-  const close  = () => setModal(null);
 
-  /* ── Auth ── */
   const login = () => {
     const role = CREDS[loginEmail.trim().toLowerCase()];
     if (!role || loginPwd !== "aldan") { setLoginErr("Invalid credentials"); return; }
     setUser({email:loginEmail.trim().toLowerCase(), role});
-    setLoginErr("");
   };
   const logout = () => { setUser(null); setView("dashboard"); };
 
-  /* ── Proposal helpers ── */
   const proposalList = useMemo(() => toArr(Object.values(proposals)), [proposals]);
-  
-  const myProposals = useMemo(() => {
-    if (!user) return [];
-    return proposalList.filter(p => p.proposedBy === user.email);
-  }, [proposalList, user]);
 
   const addProposal = (doctorKey, entries, month, year) => {
-    // entries: array of {proposed, issued}
     const existing = Object.values(proposals).find(p =>
-      p.doctorKey === doctorKey && p.month === month && p.year === year
+      p.doctorKey===doctorKey && p.month===month && p.year===year
     );
     if (existing) {
-      save(existing.id, {...existing, entries, updatedAt:now()});
+      saveProposal(existing.id, {...existing, entries, updatedAt:now()});
     } else {
       const id = uid();
-      save(id, {
-        id, doctorKey, month, year: year||"FY 2026-27",
-        entries,           // [{proposed, issued}]  — issued defaults to proposed
-        status: STATUSES.PROPOSED,
-        proposedBy: user.email,
-        proposedAt: now(),
-        updatedAt: now()
-      });
+      saveProposal(id, { id, doctorKey, month, year:year||"FY 2026-27", entries,
+        status:STATUSES.PROPOSED, proposedBy:user.email, proposedAt:now(), updatedAt:now() });
     }
     notify("Proposal saved!");
   };
 
   const approveProposal = (pid) => {
-    const p = proposals[pid];
-    if (!p) return;
-    save(pid, {...p, status:STATUSES.APPROVED, approvedBy:user.email, approvedAt:now(), updatedAt:now()});
+    const p = proposals[pid]; if (!p) return;
+    saveProposal(pid, {...p, status:STATUSES.APPROVED, approvedBy:user.email, approvedAt:now(), updatedAt:now()});
     notify("Approved!");
   };
-
   const confirmProposal = (pid, issuedEntries) => {
-    const p = proposals[pid];
-    if (!p) return;
-    save(pid, {...p, status:STATUSES.CONFIRMED, issuedEntries, confirmedBy:user.email, confirmedAt:now(), updatedAt:now()});
-    notify("Confirmed & Issued!");
+    const p = proposals[pid]; if (!p) return;
+    saveProposal(pid, {...p, status:STATUSES.CONFIRMED, issuedEntries, confirmedBy:user.email, confirmedAt:now(), updatedAt:now()});
+    notify("Confirmed!");
   };
-
   const rejectProposal = (pid) => {
-    const p = proposals[pid];
-    if (!p) return;
-    save(pid, {...p, status:STATUSES.PROPOSED, approvedBy:null, approvedAt:null, updatedAt:now()});
-    notify("Reverted to Proposed","amber");
+    const p = proposals[pid]; if (!p) return;
+    saveProposal(pid, {...p, status:STATUSES.PROPOSED, approvedBy:null, approvedAt:null, updatedAt:now()});
+    notify("Reverted","amber");
   };
 
-  /* ── Compute stats ── */
   const stats = useMemo(() => {
-    // Per HQ aggregation for tracker
     const hqStats = {};
-    HQ_LIST.forEach(hq => {
-      hqStats[hq] = { plan:HQ_PLAN[hq], proposed:0, approved:0, confirmed:0 };
-    });
+    HQ_LIST.forEach(hq => { hqStats[hq] = {plan:HQ_PLAN[hq],proposed:0,approved:0,confirmed:0}; });
     proposalList.forEach(p => {
-      const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq === p.doctorKey);
-      if (!doc) return;
-      const proposed = (p.entries||[]).reduce((s,e)=>s+Number(e.proposed||0),0);
-      const approved = (p.entries||[]).reduce((s,e)=>s+Number(e.proposed||0),0);
-      const issued   = (p.issuedEntries||p.entries||[]).reduce((s,e)=>s+Number(e.issued||e.proposed||0),0);
-      if (!hqStats[doc.hq]) return;
-      if (p.status===STATUSES.PROPOSED || p.status===STATUSES.APPROVED || p.status===STATUSES.CONFIRMED)
-        hqStats[doc.hq].proposed += proposed;
-      if (p.status===STATUSES.APPROVED || p.status===STATUSES.CONFIRMED)
-        hqStats[doc.hq].approved += approved;
-      if (p.status===STATUSES.CONFIRMED)
-        hqStats[doc.hq].confirmed += issued;
+      const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq===p.doctorKey);
+      if (!doc || !hqStats[doc.hq]) return;
+      const amt = (p.entries||[]).reduce((s,e)=>s+Number(e.proposed||0),0);
+      const iss = (p.issuedEntries||p.entries||[]).reduce((s,e)=>s+Number(e.issued||e.proposed||0),0);
+      if ([STATUSES.PROPOSED,STATUSES.APPROVED,STATUSES.CONFIRMED].includes(p.status)) hqStats[doc.hq].proposed += amt;
+      if ([STATUSES.APPROVED,STATUSES.CONFIRMED].includes(p.status)) hqStats[doc.hq].approved += amt;
+      if (p.status===STATUSES.CONFIRMED) hqStats[doc.hq].confirmed += iss;
     });
     return hqStats;
   }, [proposalList]);
 
   const biharStats = useMemo(() => ({
     proposed: Object.values(stats).reduce((s,v)=>s+v.proposed,0),
-    approved: Object.values(stats).reduce((s,v)=>s+v.approved,0),
+    approved:  Object.values(stats).reduce((s,v)=>s+v.approved,0),
     confirmed: Object.values(stats).reduce((s,v)=>s+v.confirmed,0),
   }), [stats]);
 
-  /* ══════════════ LOGIN SCREEN ══════════════ */
+  const isZSM   = user?.role==="zsm";
+  const isAdmin = user?.role==="admin";
+
+  /* ── LOGIN ── */
   if (!user) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 shadow-xl mb-4">
-            <span className="text-2xl">💊</span>
-          </div>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 shadow-xl mb-4"><span className="text-2xl">💊</span></div>
           <h1 className="text-2xl font-black text-white">Aldan Healthcare</h1>
           <p className="text-blue-300 text-sm mt-1">CRM 26 – Bihar Region</p>
         </div>
@@ -225,58 +233,43 @@ function App() {
           <div className="space-y-3 mb-4">
             <div>
               <label className="text-xs font-bold text-blue-200 uppercase tracking-widest block mb-1.5">Email</label>
-              <input value={loginEmail} onChange={e=>{setLoginEmail(e.target.value);setLoginErr("");}}
-                onKeyDown={e=>e.key==="Enter"&&login()}
+              <input value={loginEmail} onChange={e=>{setLoginEmail(e.target.value);setLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&login()}
                 placeholder="zsm@aldan or admin@aldan"
                 className="w-full px-4 py-2.5 rounded-xl bg-white/15 border border-white/20 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"/>
             </div>
             <div>
               <label className="text-xs font-bold text-blue-200 uppercase tracking-widest block mb-1.5">Password</label>
-              <input type="password" value={loginPwd} onChange={e=>{setLoginPwd(e.target.value);setLoginErr("");}}
-                onKeyDown={e=>e.key==="Enter"&&login()}
+              <input type="password" value={loginPwd} onChange={e=>{setLoginPwd(e.target.value);setLoginErr("");}} onKeyDown={e=>e.key==="Enter"&&login()}
                 placeholder="••••••"
                 className="w-full px-4 py-2.5 rounded-xl bg-white/15 border border-white/20 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"/>
             </div>
           </div>
           {loginErr && <p className="text-red-300 text-xs mb-3 font-semibold">{loginErr}</p>}
-          <button onClick={login} className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition-colors">
-            Sign In →
-          </button>
+          <button onClick={login} className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm">Sign In →</button>
           <p className="text-white/20 text-xs text-center mt-4">Password: aldan</p>
         </div>
       </div>
     </div>
   );
 
-  /* ══════════════ LOADING ══════════════ */
   if (!loaded) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="text-center">
-        <div className="text-4xl animate-bounce mb-3">💊</div>
-        <p className="font-bold text-slate-500">Loading CRM data…</p>
-      </div>
+      <div className="text-center"><div className="text-4xl animate-bounce mb-3">💊</div><p className="font-bold text-slate-500">Loading…</p></div>
     </div>
   );
 
-  /* ══════════════ MAIN SHELL ══════════════ */
-  const isZSM   = user.role === "zsm";
-  const isAdmin = user.role === "admin";
-
   const navItems = isZSM
-    ? [["dashboard","📊 Dashboard"],["propose","➕ Propose"],["myproposals","📋 My Proposals"]]
-    : [["dashboard","📊 Dashboard"],["approve","✅ Approve"],["tracker","📈 Tracker"]];
+    ? [["dashboard","📊","Dashboard"],["propose","➕","Propose"],["myproposals","📋","My Proposals"],["salestrack","📈","Sales Track"]]
+    : [["dashboard","📊","Dashboard"],["approve","✅","Approve"],["tracker","📈","Tracker"],["salestrack","📊","Sales Track"]];
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-[200] px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-xl
           ${toast.c==="green"?"bg-emerald-500":toast.c==="red"?"bg-red-500":toast.c==="amber"?"bg-amber-500":"bg-blue-500"}`}>
           {toast.msg}
         </div>
       )}
-
-      {/* Confirm */}
       {confirm && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" style={{background:"rgba(15,23,42,0.6)"}}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
@@ -289,62 +282,110 @@ function App() {
         </div>
       )}
 
-      {/* NAV */}
+      {/* NAV — mobile fixed */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-3">
-              <span className="text-lg font-black text-blue-700">💊 CRM 26</span>
-              <span className="text-xs font-bold text-blue-400 bg-blue-50 px-1.5 py-0.5 rounded-md ml-1">{APP_VERSION}</span>
-              <span className="text-slate-300 hidden sm:inline mx-1">|</span>
-              <span className="text-xs text-slate-400 hidden sm:inline font-semibold">Bihar · {isZSM?"ZSM":"Admin"}</span>
+        <div className="max-w-7xl mx-auto px-3">
+          <div className="flex items-center justify-between h-12">
+            {/* Logo — compact single line */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-base font-black text-blue-700 whitespace-nowrap">💊 CRM 26</span>
+              <span className="text-xs font-bold text-blue-400 bg-blue-50 px-1.5 py-0.5 rounded-md whitespace-nowrap">{APP_VERSION}</span>
             </div>
-            <div className="flex items-center gap-1">
-              {navItems.map(([v,l]) => (
+            {/* Nav items */}
+            <div className="flex items-center gap-0.5 overflow-x-auto">
+              {navItems.map(([v,icon,label]) => (
                 <button key={v} onClick={()=>setView(v)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${view===v?"bg-blue-600 text-white":"text-slate-500 hover:bg-slate-100"}`}>
-                  {l}
+                  className={`px-2 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1
+                    ${view===v?"bg-blue-600 text-white":"text-slate-500 hover:bg-slate-100"}`}>
+                  <span>{icon}</span>
+                  <span className="hidden sm:inline">{label}</span>
                 </button>
               ))}
-              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-slate-100">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold hidden sm:inline
+              <div className="flex items-center ml-1 pl-1 border-l border-slate-100 shrink-0">
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold hidden md:inline
                   ${syncSt==="synced"?"bg-emerald-100 text-emerald-700":syncSt==="saving"?"bg-amber-100 text-amber-700":"bg-red-100 text-red-600"}`}>
-                  {syncSt==="synced"?"● Live":syncSt==="saving"?"⟳":"✕"}
+                  {syncSt==="synced"?"●":syncSt==="saving"?"⟳":"✕"}
                 </span>
-                <button onClick={logout} className="text-xs text-slate-400 hover:text-red-500 px-2 py-1">Logout</button>
+                <button onClick={logout} className="text-xs text-slate-400 hover:text-red-500 px-2 py-1 ml-1">Exit</button>
               </div>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* VIEWS */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {view==="dashboard" && <DashboardView stats={stats} biharStats={biharStats} proposalList={proposalList} />}
-        {view==="propose" && isZSM && <ProposeView user={user} proposals={proposals} onSave={addProposal} notify={notify} setConfirm={setConfirm} />}
-        {view==="myproposals" && isZSM && <MyProposalsView myProposals={myProposals} />}
-        {view==="approve" && isAdmin && <ApproveView proposals={proposals} proposalList={proposalList} onApprove={approveProposal} onReject={rejectProposal} onConfirm={confirmProposal} notify={notify} setConfirm={setConfirm} />}
-        {view==="tracker" && isAdmin && <TrackerView stats={stats} biharStats={biharStats} proposalList={proposalList} />}
+      <div className="max-w-7xl mx-auto px-3 py-5">
+        {view==="dashboard"    && <DashboardView stats={stats} biharStats={biharStats} proposalList={proposalList} />}
+        {view==="propose"      && isZSM   && <ProposeView user={user} proposals={proposals} onSave={addProposal} notify={notify} setConfirm={setConfirm} />}
+        {view==="myproposals"  && isZSM   && <MyProposalsView myProposals={proposalList.filter(p=>p.proposedBy===user.email)} />}
+        {view==="approve"      && isAdmin  && <ApproveView proposals={proposals} proposalList={proposalList} onApprove={approveProposal} onReject={rejectProposal} onConfirm={confirmProposal} setConfirm={setConfirm} />}
+        {view==="tracker"      && isAdmin  && <TrackerView stats={stats} biharStats={biharStats} proposalList={proposalList} />}
+        {view==="salestrack"   && <SalesTrackView salesData={salesData} onSave={saveSalesData} isAdmin={isAdmin} notify={notify} setConfirm={setConfirm} />}
       </div>
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════
-   DASHBOARD VIEW
+   DASHBOARD
 ══════════════════════════════════════════════════════ */
 function DashboardView({stats, biharStats, proposalList}) {
-  const proposed  = proposalList.filter(p=>p.status==="Proposed").length;
-  const approved  = proposalList.filter(p=>p.status==="Approved").length;
-  const confirmed = proposalList.filter(p=>p.status==="Confirmed").length;
+  const [shareMonth, setShareMonth] = useState(curMonth());
+  const [shareYear,  setShareYear]  = useState("FY 2026-27");
+
+  const pendingByHQ = useMemo(() => {
+    const result = {};
+    HQ_LIST.forEach(hq => {
+      const docs = DOCTOR_MASTER.filter(d => d.hq===hq && d.crm26>0);
+      const proposed = new Set(
+        proposalList.filter(p => p.month===shareMonth && p.year===shareYear)
+          .map(p => p.doctorKey)
+      );
+      result[hq] = docs.filter(d => !proposed.has(d.name+"___"+d.hq));
+    });
+    return result;
+  }, [proposalList, shareMonth, shareYear]);
+
+  const shareCard = (hq) => {
+    const pending = pendingByHQ[hq];
+    if (!pending.length) { alert(`No pending doctors for ${hq} in ${shareMonth} ${shareYear}`); return; }
+    const total = pending.reduce((s,d)=>s+d.crm26,0);
+    let text = `📊 *CRM Pending — ${hq}*\n${shareMonth} ${shareYear}\n`;
+    text += `${'─'.repeat(30)}\n`;
+    pending.forEach((d,i) => { text += `${i+1}. ${d.name} — ${inr(d.crm26)}\n`; });
+    text += `${'─'.repeat(30)}\n`;
+    text += `*Pending Total: ${inr(total)}* (${pending.length} doctors)\n`;
+    text += `\nGenerated by CRM 26 · Aldan Healthcare`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url,'_blank');
+  };
+
+  const shareAllHQs = () => {
+    let text = `📊 *CRM Pending — All HQs*\n${shareMonth} ${shareYear}\n${'═'.repeat(30)}\n`;
+    let grandTotal = 0; let grandCount = 0;
+    HQ_LIST.forEach(hq => {
+      const pending = pendingByHQ[hq];
+      if (!pending.length) return;
+      const total = pending.reduce((s,d)=>s+d.crm26,0);
+      grandTotal += total; grandCount += pending.length;
+      text += `\n*${hq}* (${pending.length} pending)\n`;
+      pending.forEach(d => { text += `  • ${d.name} — ${inr(d.crm26)}\n`; });
+      text += `  Subtotal: ${inr(total)}\n`;
+    });
+    text += `\n${'═'.repeat(30)}\n*Bihar Pending Total: ${inr(grandTotal)}* (${grandCount} doctors)`;
+    text += `\n\nGenerated by CRM 26 · Aldan Healthcare`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+  };
+
+  const proposed  = proposalList.filter(p=>p.status===STATUSES.PROPOSED).length;
+  const approved  = proposalList.filter(p=>p.status===STATUSES.APPROVED).length;
+  const confirmed = proposalList.filter(p=>p.status===STATUSES.CONFIRMED).length;
 
   return (
     <div>
       <h1 className="text-xl font-black text-slate-800 mb-1">Dashboard</h1>
-      <p className="text-sm text-slate-400 mb-5">Bihar CRM 26 – Real-time overview</p>
+      <p className="text-sm text-slate-400 mb-4">Bihar CRM 26 – Real-time overview</p>
 
-      {/* Bihar summary strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <p className="text-xs font-bold uppercase text-slate-400 mb-1">Bihar Plan CRM26</p>
           <p className="text-2xl font-black text-slate-800">{inrL(BIHAR_TOTAL)}</p>
@@ -366,49 +407,67 @@ function DashboardView({stats, biharStats, proposalList}) {
         </div>
       </div>
 
-      {/* Proposal counts */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[{l:"Proposed",v:proposed,c:"bg-amber-50 border-amber-100",t:"text-amber-700"},{l:"Approved",v:approved,c:"bg-blue-50 border-blue-100",t:"text-blue-700"},{l:"Confirmed",v:confirmed,c:"bg-emerald-50 border-emerald-100",t:"text-emerald-700"}].map(x=>(
-          <div key={x.l} className={`${x.c} rounded-2xl border p-4 text-center`}>
-            <p className={`text-3xl font-black ${x.t}`}>{x.v}</p>
-            <p className={`text-xs font-bold uppercase ${x.t} mt-1`}>{x.l} proposals</p>
+          <div key={x.l} className={`${x.c} rounded-2xl border p-3 text-center`}>
+            <p className={`text-2xl font-black ${x.t}`}>{x.v}</p>
+            <p className={`text-xs font-bold uppercase ${x.t} mt-0.5`}>{x.l}</p>
           </div>
         ))}
       </div>
 
-      {/* HQ table */}
+      {/* HQ table with pending share */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-50">
-          <h3 className="font-black text-slate-700">HQ-wise CRM26 Status</h3>
+        <div className="px-4 py-3 border-b border-slate-50 flex flex-wrap gap-2 items-center justify-between">
+          <h3 className="font-black text-slate-700 text-sm">HQ-wise CRM26 Status</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-slate-400 font-semibold">Pending for:</span>
+            <select value={shareMonth} onChange={e=>setShareMonth(e.target.value)}
+              className="px-2 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none">
+              {MONTHS.map(m=><option key={m}>{m}</option>)}
+            </select>
+            <select value={shareYear} onChange={e=>setShareYear(e.target.value)}
+              className="px-2 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none">
+              {YEARS.map(y=><option key={y}>{y}</option>)}
+            </select>
+            <button onClick={shareAllHQs} className="px-2 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg">📤 Share All</button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>
-                {["HQ","ASM","Plan CRM26","Proposed","Approved","Confirmed","Util%"].map(h=>(
-                  <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
-                ))}
-              </tr>
+              <tr>{["HQ","ASM","Plan","Proposed","Approved","Confirmed","Util%","Pending","Share"].map(h=>(
+                <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
+              ))}</tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {HQ_LIST.map(hq => {
                 const s = stats[hq]||{plan:0,proposed:0,approved:0,confirmed:0};
                 const util = s.plan>0 ? Math.round(s.confirmed/s.plan*100) : 0;
+                const pendingDocs = pendingByHQ[hq]||[];
                 return (
                   <tr key={hq} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 font-semibold text-slate-800">{hq}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-400">{ASM_MAP[hq]}</td>
-                    <td className="px-4 py-2.5 font-bold text-slate-700">{inrL(s.plan)}</td>
-                    <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{inrL(s.proposed)}</span></td>
-                    <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{inrL(s.approved)}</span></td>
-                    <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">{inrL(s.confirmed)}</span></td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-slate-100 rounded-full h-1.5">
-                          <div className="bg-emerald-500 h-1.5 rounded-full" style={{width:`${Math.min(util,100)}%`}}/>
-                        </div>
+                    <td className="px-3 py-2.5 font-semibold text-slate-800">{hq}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-400">{ASM_MAP[hq]}</td>
+                    <td className="px-3 py-2.5 font-bold text-slate-700">{inrL(s.plan)}</td>
+                    <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{inrL(s.proposed)}</span></td>
+                    <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{inrL(s.approved)}</span></td>
+                    <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">{inrL(s.confirmed)}</span></td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-12 bg-slate-100 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full" style={{width:`${Math.min(util,100)}%`}}/></div>
                         <span className={`text-xs font-bold ${util>=80?"text-emerald-600":util>=50?"text-amber-600":"text-slate-400"}`}>{util}%</span>
                       </div>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {pendingDocs.length > 0
+                        ? <span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-600">{pendingDocs.length} docs</span>
+                        : <span className="text-xs text-emerald-500 font-bold">✓ Done</span>}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {pendingDocs.length > 0 && (
+                        <button onClick={()=>shareCard(hq)} className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg hover:bg-emerald-100">📤 WA</button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -416,13 +475,14 @@ function DashboardView({stats, biharStats, proposalList}) {
             </tbody>
             <tfoot>
               <tr className="bg-blue-50 border-t-2 border-blue-200 font-black">
-                <td className="px-4 py-3 text-blue-800">Bihar Total</td>
-                <td className="px-4 py-3"></td>
-                <td className="px-4 py-3 text-slate-700">{inrL(BIHAR_TOTAL)}</td>
-                <td className="px-4 py-3 text-amber-700">{inrL(Object.values(stats).reduce((s,v)=>s+v.proposed,0))}</td>
-                <td className="px-4 py-3 text-blue-700">{inrL(Object.values(stats).reduce((s,v)=>s+v.approved,0))}</td>
-                <td className="px-4 py-3 text-emerald-700">{inrL(Object.values(stats).reduce((s,v)=>s+v.confirmed,0))}</td>
-                <td className="px-4 py-3 text-blue-700">{((Object.values(stats).reduce((s,v)=>s+v.confirmed,0)/BIHAR_TOTAL)*100).toFixed(1)}%</td>
+                <td className="px-3 py-3 text-blue-800" colSpan={2}>Bihar Total</td>
+                <td className="px-3 py-3">{inrL(BIHAR_TOTAL)}</td>
+                <td className="px-3 py-3 text-amber-700">{inrL(biharStats.proposed)}</td>
+                <td className="px-3 py-3 text-blue-700">{inrL(biharStats.approved)}</td>
+                <td className="px-3 py-3 text-emerald-700">{inrL(biharStats.confirmed)}</td>
+                <td className="px-3 py-3 text-emerald-700">{((biharStats.confirmed/BIHAR_TOTAL)*100).toFixed(1)}%</td>
+                <td className="px-3 py-3 text-red-600">{Object.values(pendingByHQ).reduce((s,v)=>s+v.length,0)} docs</td>
+                <td></td>
               </tr>
             </tfoot>
           </table>
@@ -433,239 +493,352 @@ function DashboardView({stats, biharStats, proposalList}) {
 }
 
 /* ══════════════════════════════════════════════════════
-   PROPOSE VIEW (ZSM)
+   PROPOSE VIEW
 ══════════════════════════════════════════════════════ */
 function ProposeView({user, proposals, onSave, notify, setConfirm}) {
-  const [hqFilter, setHqFilter] = useState("");
-  const [search,   setSearch]   = useState("");
-  const [month,    setMonth]    = useState(curMonth());
-  const [year,     setYear]     = useState("FY 2026-27");
-  const [editing,  setEditing]  = useState(null); // doctorKey
-  const [form,     setForm]     = useState({proposed:0, issued:0});
+  const [month,      setMonth]      = useState("");
+  const [year,       setYear]       = useState("");
+  const [hqFilter,   setHqFilter]   = useState("");
+  const [search,     setSearch]     = useState("");
+  const [showPending,setShowPending]= useState(false);
+  const [selected,   setSelected]   = useState({}); // doctorKey → true
+  const [bulkModal,  setBulkModal]  = useState(false);
+  const [bulkAmts,   setBulkAmts]   = useState({}); // doctorKey → amount
+  const [editModal,  setEditModal]  = useState(null); // single doctor edit
+  const [editAmt,    setEditAmt]    = useState(0);
+
+  const periodReady = month && year;
+
+  const getExisting = useCallback((doctorKey) => {
+    if (!periodReady) return null;
+    return Object.values(proposals).find(p => p.doctorKey===doctorKey && p.month===month && p.year===year);
+  }, [proposals, month, year]);
+
+  // Pending count per HQ for badge
+  const pendingCount = useMemo(() => {
+    if (!periodReady) return {};
+    const proposed = new Set(Object.values(proposals).filter(p=>p.month===month&&p.year===year).map(p=>p.doctorKey));
+    const counts = {};
+    HQ_LIST.forEach(hq => {
+      counts[hq] = DOCTOR_MASTER.filter(d=>d.hq===hq && d.crm26>0 && !proposed.has(d.name+"___"+d.hq)).length;
+    });
+    return counts;
+  }, [proposals, month, year, periodReady]);
 
   const doctors = useMemo(() => {
-    return DOCTOR_MASTER.filter(d => {
-      if (hqFilter && d.hq !== hqFilter) return false;
-      if (search && !d.name.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
-  }, [hqFilter, search]);
+    let list = DOCTOR_MASTER;
+    if (hqFilter) list = list.filter(d=>d.hq===hqFilter);
+    if (search)   list = list.filter(d=>d.name.toLowerCase().includes(search.toLowerCase()));
+    if (showPending && periodReady) {
+      const proposed = new Set(Object.values(proposals).filter(p=>p.month===month&&p.year===year).map(p=>p.doctorKey));
+      list = list.filter(d => d.crm26>0 && !proposed.has(d.name+"___"+d.hq));
+    }
+    return list;
+  }, [hqFilter, search, showPending, proposals, month, year, periodReady]);
 
-  const getExisting = (doctorKey) => {
-    return Object.values(proposals).find(p => p.doctorKey===doctorKey && p.month===month && p.year===year);
+  const selectedKeys = Object.keys(selected).filter(k=>selected[k]);
+
+  const toggleSelect = (key) => setSelected(prev => ({...prev, [key]: !prev[key]}));
+  const selectAll    = () => { const s={}; doctors.forEach(d=>{s[d.name+"___"+d.hq]=true;}); setSelected(s); };
+  const deselectAll  = () => setSelected({});
+
+  const openBulk = () => {
+    const amts = {};
+    selectedKeys.forEach(k => {
+      const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===k);
+      const ex  = getExisting(k);
+      amts[k] = ex?.entries?.[0]?.proposed || doc?.crm26 || 0;
+    });
+    setBulkAmts(amts);
+    setBulkModal(true);
   };
 
-  const startEdit = (doc) => {
+  const submitBulk = () => {
+    selectedKeys.forEach(k => {
+      const amt = Number(bulkAmts[k]||0);
+      onSave(k, [{proposed:amt, issued:amt}], month, year);
+    });
+    setSelected({});
+    setBulkModal(false);
+    notify(`${selectedKeys.length} proposals saved!`);
+  };
+
+  const openEdit = (doc) => {
     const key = doc.name+"___"+doc.hq;
-    const ex = getExisting(key);
-    setEditing(key);
-    setForm({
-      proposed: ex?.entries?.[0]?.proposed || doc.crm26 || 0,
-      issued:   ex?.issuedEntries?.[0]?.issued || ex?.entries?.[0]?.proposed || doc.crm26 || 0
-    });
+    const ex  = getExisting(key);
+    setEditModal(doc);
+    setEditAmt(ex?.entries?.[0]?.proposed || doc.crm26 || 0);
   };
 
-  const submitProposal = () => {
-    if (!editing) return;
-    onSave(editing, [{proposed: Number(form.proposed), issued: Number(form.proposed)}], month, year);
-    setEditing(null);
+  const submitEdit = () => {
+    const key = editModal.name+"___"+editModal.hq;
+    onSave(key, [{proposed:Number(editAmt), issued:Number(editAmt)}], month, year);
+    setEditModal(null);
   };
 
   return (
     <div>
       <h1 className="text-xl font-black text-slate-800 mb-1">Propose CRM</h1>
-      <p className="text-sm text-slate-400 mb-5">Select month, find doctor, set proposed amount</p>
+      <p className="text-sm text-slate-400 mb-4">Select period first, then propose for doctors</p>
 
-      {/* Edit modal */}
-      {editing && (()=>{
-        const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq === editing);
-        const ex = getExisting(editing);
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:"rgba(15,23,42,0.65)"}}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-              <div className="px-6 pt-5 pb-4 border-b border-slate-100">
-                <h2 className="font-black text-slate-800">Propose CRM – {doc?.name}</h2>
-                <p className="text-xs text-slate-400 mt-0.5">{doc?.hq} · {month} {year}</p>
+      {/* Single doctor edit modal */}
+      {editModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:"rgba(15,23,42,0.65)"}}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+              <h2 className="font-black text-slate-800">Propose CRM</h2>
+              <p className="text-xs text-slate-400 mt-0.5">{editModal.name} · {editModal.hq} · {month} {year}</p>
+            </div>
+            <div className="px-6 py-4 space-y-3">
+              <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-500 space-y-1">
+                <div className="flex justify-between"><span>CRM25 Actual</span><strong>{inr(editModal.crm25_act)}</strong></div>
+                <div className="flex justify-between"><span>Avg PTR FY25/mo</span><strong>{inr(editModal.avg_ptr25)}</strong></div>
+                <div className="flex justify-between"><span>Plan CRM26 (Annual)</span><strong className="text-blue-600">{inr(editModal.crm26)}</strong></div>
+                <div className="flex justify-between"><span>Plan Sales26/mo</span><strong>{inr(editModal.sales26)}</strong></div>
               </div>
-              <div className="px-6 py-5 space-y-4">
-                <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-500 space-y-1">
-                  <div className="flex justify-between"><span>CRM25 Actual</span><strong>{inr(doc?.crm25_act)}</strong></div>
-                  <div className="flex justify-between"><span>Avg PTR FY25</span><strong>{inr(doc?.avg_ptr25)}/mo</strong></div>
-                  <div className="flex justify-between"><span>Plan CRM26</span><strong className="text-blue-600">{inr(doc?.crm26)}</strong></div>
-                  <div className="flex justify-between"><span>Plan Sales26</span><strong>{inr(doc?.sales26)}</strong></div>
+              {getExisting(editModal.name+"___"+editModal.hq) && (
+                <div className="text-xs px-3 py-2 rounded-lg font-semibold bg-amber-100 text-amber-700">
+                  Existing: {getExisting(editModal.name+"___"+editModal.hq)?.status} · {inr(getExisting(editModal.name+"___"+editModal.hq)?.entries?.[0]?.proposed)}
                 </div>
-                {ex && <div className={`text-xs px-3 py-2 rounded-lg font-semibold ${STATUS_COLORS[ex.status].bg} ${STATUS_COLORS[ex.status].text}`}>Existing: {ex.status} · {inr(ex.entries?.[0]?.proposed)}</div>}
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Proposed CRM Amount (₹)</label>
-                  <input type="number" value={form.proposed} onChange={e=>setForm({...form,proposed:e.target.value})}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"/>
-                </div>
+              )}
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Proposed CRM Amount (₹)</label>
+                <input type="number" value={editAmt} onChange={e=>setEditAmt(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"/>
               </div>
-              <div className="flex gap-3 px-6 pb-5">
-                <button onClick={()=>setEditing(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold">Cancel</button>
-                <button onClick={submitProposal} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700">
-                  {ex ? "Update Proposal" : "Submit Proposal"}
-                </button>
+            </div>
+            <div className="flex gap-3 px-6 pb-5">
+              <button onClick={()=>setEditModal(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold">Cancel</button>
+              <button onClick={submitEdit} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700">
+                {getExisting(editModal.name+"___"+editModal.hq) ? "Update" : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk proposal modal */}
+      {bulkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:"rgba(15,23,42,0.65)"}}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+            <div className="px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
+              <h2 className="font-black text-slate-800">Bulk Propose — {selectedKeys.length} Doctors</h2>
+              <p className="text-xs text-slate-400 mt-0.5">{month} {year} · Adjust amounts below</p>
+            </div>
+            <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2">
+              {selectedKeys.map(k => {
+                const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===k);
+                return (
+                  <div key={k} className="flex items-center gap-3 py-2 border-b border-slate-50">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-800 text-sm truncate">{doc?.name}</p>
+                      <p className="text-xs text-slate-400">{doc?.hq} · Plan: {inr(doc?.crm26)}</p>
+                    </div>
+                    <input type="number" value={bulkAmts[k]||0}
+                      onChange={e=>setBulkAmts(prev=>({...prev,[k]:e.target.value}))}
+                      className="w-28 px-2 py-1.5 border border-slate-200 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-300"/>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-6 py-4 border-t border-slate-100 shrink-0">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs text-slate-500 font-semibold">Total Proposed</span>
+                <span className="font-black text-blue-700">{inr(Object.values(bulkAmts).reduce((s,v)=>s+Number(v||0),0))}</span>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={()=>setBulkModal(false)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold">Cancel</button>
+                <button onClick={submitBulk} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700">Submit All</button>
               </div>
             </div>
           </div>
-        );
-      })()}
-
-      {/* Month + Year selector — prominent */}
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4 flex flex-wrap gap-3 items-center">
-        <span className="text-xs font-black text-blue-700 uppercase tracking-widest">Proposing for:</span>
-        <select value={month} onChange={e=>setMonth(e.target.value)}
-          className="px-3 py-2 border-2 border-blue-300 rounded-xl text-sm font-bold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
-          {MONTHS.map(m=><option key={m}>{m}</option>)}
-        </select>
-        <select value={year} onChange={e=>setYear(e.target.value)}
-          className="px-3 py-2 border-2 border-blue-300 rounded-xl text-sm font-bold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
-          {YEARS.map(y=><option key={y}>{y}</option>)}
-        </select>
-        <span className="text-xs text-blue-500 font-semibold">All proposals below will be tagged to this period</span>
-      </div>
-      {/* Other Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <select value={hqFilter} onChange={e=>setHqFilter(e.target.value)}
-          className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white">
-          <option value="">All HQs</option>
-          {HQ_LIST.map(h=><option key={h}>{h}</option>)}
-        </select>
-        <input placeholder="Search doctor…" value={search} onChange={e=>setSearch(e.target.value)}
-          className="flex-1 min-w-40 px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"/>
-      </div>
-
-      {/* Doctor table */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>
-                {["HQ","Doctor","CRM25 Act","Plan CRM26",`${month} ${year} Status`,`${month} ${year} Amt`,"Action"].map(h=>(
-                  <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {doctors.map(doc => {
-                const key = doc.name+"___"+doc.hq;
-                const ex  = getExisting(key);
-                const sc  = ex ? STATUS_COLORS[ex.status] : null;
-                return (
-                  <tr key={key} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 text-xs text-slate-400">{doc.hq}</td>
-                    <td className="px-4 py-2.5 font-semibold text-slate-800">{doc.name}</td>
-                    <td className="px-4 py-2.5 text-slate-600">{doc.crm25_act>0?inr(doc.crm25_act):<span className="text-slate-300">—</span>}</td>
-                    <td className="px-4 py-2.5 font-bold text-blue-700">{doc.crm26>0?inr(doc.crm26):<span className="text-slate-300">—</span>}</td>
-                    <td className="px-4 py-2.5">
-                      {ex ? <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{ex.status}</span>
-                           : <span className="text-slate-300 text-xs">—</span>}
-                    </td>
-                    <td className="px-4 py-2.5 font-bold text-slate-700">
-                      {ex ? inr(ex.entries?.[0]?.proposed) : <span className="text-slate-300 text-xs">—</span>}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {(!ex || ex.status===STATUSES.PROPOSED) ? (
-                        <button onClick={()=>startEdit(doc)}
-                          className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700">
-                          {ex ? "Edit" : "Propose"}
-                        </button>
-                      ) : (
-                        <span className="text-xs text-slate-300 font-semibold">{ex.status}</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
-        {doctors.length===0 && <div className="text-center py-10 text-slate-300 text-sm">No doctors found</div>}
+      )}
+
+      {/* PERIOD SELECTOR — mandatory */}
+      <div className={`rounded-2xl p-4 mb-4 border-2 ${periodReady?"bg-blue-50 border-blue-200":"bg-amber-50 border-amber-300"}`}>
+        <div className="flex flex-wrap gap-3 items-center">
+          <span className={`text-xs font-black uppercase tracking-widest ${periodReady?"text-blue-700":"text-amber-700"}`}>
+            {periodReady ? "📅 Proposing for:" : "⚠️ Select period to continue:"}
+          </span>
+          <select value={month} onChange={e=>setMonth(e.target.value)}
+            className={`px-3 py-2 border-2 rounded-xl text-sm font-bold focus:outline-none bg-white ${periodReady?"border-blue-300 text-blue-800":"border-amber-400 text-amber-800"}`}>
+            <option value="">— Month —</option>
+            {MONTHS.map(m=><option key={m}>{m}</option>)}
+          </select>
+          <select value={year} onChange={e=>setYear(e.target.value)}
+            className={`px-3 py-2 border-2 rounded-xl text-sm font-bold focus:outline-none bg-white ${periodReady?"border-blue-300 text-blue-800":"border-amber-400 text-amber-800"}`}>
+            <option value="">— Year —</option>
+            {YEARS.map(y=><option key={y}>{y}</option>)}
+          </select>
+          {periodReady && <span className="text-xs text-blue-500 font-semibold">All proposals tagged to this period</span>}
+        </div>
       </div>
+
+      {/* Show filters + table only when period is selected */}
+      {!periodReady ? (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
+          <div className="text-4xl mb-3">📅</div>
+          <p className="font-bold text-slate-400">Please select Month and Year above to view doctors</p>
+        </div>
+      ) : (
+        <>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            <select value={hqFilter} onChange={e=>setHqFilter(e.target.value)}
+              className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
+              <option value="">All HQs</option>
+              {HQ_LIST.map(h=>(
+                <option key={h} value={h}>{h}{pendingCount[h]>0?` (${pendingCount[h]} pending)`:""}</option>
+              ))}
+            </select>
+            <input placeholder="Search doctor…" value={search} onChange={e=>setSearch(e.target.value)}
+              className="flex-1 min-w-32 px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"/>
+            <button onClick={()=>setShowPending(!showPending)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${showPending?"bg-red-600 text-white border-red-600":"bg-white text-slate-500 border-slate-200"}`}>
+              ⏳ {showPending?"Show All":"Pending Only"}
+            </button>
+            <button onClick={selectAll} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50">Select All</button>
+            {selectedKeys.length>0 && <button onClick={deselectAll} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-400">Clear</button>}
+          </div>
+
+          {/* Bulk action bar */}
+          {selectedKeys.length > 0 && (
+            <div className="bg-blue-600 text-white rounded-xl px-4 py-2.5 mb-3 flex items-center justify-between">
+              <span className="text-sm font-bold">{selectedKeys.length} doctor{selectedKeys.length>1?"s":""} selected</span>
+              <button onClick={openBulk} className="bg-white text-blue-600 px-3 py-1 rounded-lg text-xs font-black hover:bg-blue-50">
+                Propose Selected ({selectedKeys.length}) →
+              </button>
+            </div>
+          )}
+
+          {/* Doctor table */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-100">
+                  <tr>
+                    <th className="px-3 py-2.5 text-left"><input type="checkbox" onChange={e=>e.target.checked?selectAll():deselectAll()} className="rounded"/></th>
+                    {["HQ","Doctor","CRM25 Act","Plan CRM26",`${month} Status`,`${month} Amt`,"Action"].map(h=>(
+                      <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {doctors.map(doc => {
+                    const key = doc.name+"___"+doc.hq;
+                    const ex  = getExisting(key);
+                    const sc  = ex ? STATUS_COLORS[ex.status] : null;
+                    const isSelected = !!selected[key];
+                    return (
+                      <tr key={key} className={`hover:bg-slate-50 ${isSelected?"bg-blue-50":""}`}>
+                        <td className="px-3 py-2.5">
+                          <input type="checkbox" checked={isSelected} onChange={()=>toggleSelect(key)} className="rounded"/>
+                        </td>
+                        <td className="px-3 py-2.5 text-xs text-slate-400">{doc.hq}</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800">{doc.name}</td>
+                        <td className="px-3 py-2.5 text-slate-600 text-xs">{doc.crm25_act>0?inr(doc.crm25_act):<span className="text-slate-300">—</span>}</td>
+                        <td className="px-3 py-2.5 font-bold text-blue-700 text-xs">{doc.crm26>0?inr(doc.crm26):<span className="text-slate-300">—</span>}</td>
+                        <td className="px-3 py-2.5">
+                          {ex?<span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{ex.status}</span>
+                             :<span className="text-slate-300 text-xs">—</span>}
+                        </td>
+                        <td className="px-3 py-2.5 font-bold text-slate-700 text-xs">
+                          {ex?inr(ex.entries?.[0]?.proposed):<span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          {(!ex||ex.status===STATUSES.PROPOSED)?(
+                            <button onClick={()=>openEdit(doc)}
+                              className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700">
+                              {ex?"Edit":"Propose"}
+                            </button>
+                          ):(
+                            <span className="text-xs text-slate-300 font-semibold">{ex.status}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {doctors.length===0 && <div className="text-center py-10 text-slate-300 text-sm">No doctors found</div>}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════
-   MY PROPOSALS VIEW (ZSM)
+   MY PROPOSALS VIEW
 ══════════════════════════════════════════════════════ */
 function MyProposalsView({myProposals}) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterMonth,  setFilterMonth]  = useState("");
   const [filterHQ,     setFilterHQ]     = useState("");
 
-  const filtered = useMemo(() => {
-    return myProposals.filter(p => {
-      if (filterStatus !== "all" && p.status !== filterStatus) return false;
-      if (filterMonth && p.month !== filterMonth) return false;
-      if (filterHQ) {
-        const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq === p.doctorKey);
-        if (doc?.hq !== filterHQ) return false;
-      }
-      return true;
-    });
-  }, [myProposals, filterStatus, filterMonth, filterHQ]);
+  const filtered = useMemo(() => myProposals.filter(p => {
+    if (filterStatus!=="all" && p.status!==filterStatus) return false;
+    if (filterMonth && p.month!==filterMonth) return false;
+    if (filterHQ) {
+      const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===p.doctorKey);
+      if (doc?.hq!==filterHQ) return false;
+    }
+    return true;
+  }), [myProposals, filterStatus, filterMonth, filterHQ]);
 
   const counts = {all:myProposals.length,Proposed:0,Approved:0,Confirmed:0};
   myProposals.forEach(p=>counts[p.status]++);
 
-  // Subtotals by month (from filtered list)
+  const groupedRows = useMemo(() => {
+    const g = {};
+    filtered.forEach(p => {
+      const k = `${p.month} ${p.year||"FY 2026-27"}`;
+      if(!g[k]) g[k]=[];
+      g[k].push(p);
+    });
+    return g;
+  }, [filtered]);
+
   const monthSubtotals = useMemo(() => {
     const mt = {};
     filtered.forEach(p => {
-      const key = `${p.month} ${p.year||"FY 2026-27"}`;
-      mt[key] = (mt[key]||0) + Number(p.entries?.[0]?.proposed||0);
+      const k = `${p.month} ${p.year||"FY 2026-27"}`;
+      mt[k] = (mt[k]||0) + Number(p.entries?.[0]?.proposed||0);
     });
     return mt;
   }, [filtered]);
 
-  // Group filtered by month-year for subtotal rows
-  const groupedRows = useMemo(() => {
-    const groups = {};
-    filtered.forEach(p => {
-      const key = `${p.month} ${p.year||"FY 2026-27"}`;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(p);
-    });
-    return groups;
-  }, [filtered]);
-
-  const grandTotal = filtered.reduce((s,p) => s + Number(p.entries?.[0]?.proposed||0), 0);
+  const grandTotal = filtered.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0);
 
   return (
     <div>
       <h1 className="text-xl font-black text-slate-800 mb-1">My Proposals</h1>
       <p className="text-sm text-slate-400 mb-4">All CRM proposals submitted by you</p>
 
-      {/* Status filters */}
       <div className="flex gap-2 mb-3 flex-wrap">
         {[["all","All",counts.all],["Proposed","Proposed",counts.Proposed],["Approved","Approved",counts.Approved],["Confirmed","Confirmed",counts.Confirmed]].map(([v,l,c])=>(
           <button key={v} onClick={()=>setFilterStatus(v)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors
-              ${filterStatus===v?"bg-blue-600 text-white border-blue-600":"bg-white text-slate-500 border-slate-200 hover:bg-slate-50"}`}>
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${filterStatus===v?"bg-blue-600 text-white border-blue-600":"bg-white text-slate-500 border-slate-200"}`}>
             {l} ({c})
           </button>
         ))}
       </div>
 
-      {/* Month + HQ filters */}
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
         <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)}
-          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
           <option value="">All Months</option>
           {MONTHS.map(m=><option key={m}>{m}</option>)}
         </select>
         <select value={filterHQ} onChange={e=>setFilterHQ(e.target.value)}
-          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
           <option value="">All HQs</option>
           {HQ_LIST.map(h=><option key={h}>{h}</option>)}
         </select>
         {(filterMonth||filterHQ) && (
-          <button onClick={()=>{setFilterMonth("");setFilterHQ("");}}
-            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white text-slate-400 hover:text-red-500">
-            ✕ Clear
-          </button>
+          <button onClick={()=>{setFilterMonth("");setFilterHQ("");}} className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-slate-400 hover:text-red-500 bg-white">✕ Clear</button>
         )}
         {filtered.length>0 && (
           <div className="ml-auto flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-1.5">
@@ -679,45 +852,42 @@ function MyProposalsView({myProposals}) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>{["Doctor","HQ","Month","Year","Proposed Amt","Status","Proposed On","Approved By"].map(h=>(
-                <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
+              <tr>{["Doctor","HQ","Month","Year","Proposed Amt","Status","On","Approved By"].map(h=>(
+                <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
               ))}</tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {Object.entries(groupedRows).map(([monthKey, proposals]) => (
+              {Object.entries(groupedRows).map(([monthKey, props]) => (
                 <React.Fragment key={monthKey}>
-                  {proposals.map(p => {
-                    const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq === p.doctorKey);
+                  {props.map(p => {
+                    const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===p.doctorKey);
                     const sc  = STATUS_COLORS[p.status];
                     return (
                       <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-2.5 font-semibold text-slate-800">{doc?.name||p.doctorKey}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500">{doc?.hq}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500">{p.month}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-400">{p.year||"FY 2026-27"}</td>
-                        <td className="px-4 py-2.5 font-bold text-slate-700">{inr(p.entries?.[0]?.proposed)}</td>
-                        <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{p.status}</span></td>
-                        <td className="px-4 py-2.5 text-xs text-slate-400">{p.proposedAt}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-400">{p.approvedBy||"—"}</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800">{doc?.name||p.doctorKey}</td>
+                        <td className="px-3 py-2.5 text-xs text-slate-500">{doc?.hq}</td>
+                        <td className="px-3 py-2.5 text-xs text-slate-500">{p.month}</td>
+                        <td className="px-3 py-2.5 text-xs text-slate-400">{p.year||"FY 2026-27"}</td>
+                        <td className="px-3 py-2.5 font-bold text-slate-700">{inr(p.entries?.[0]?.proposed)}</td>
+                        <td className="px-3 py-2.5"><span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{p.status}</span></td>
+                        <td className="px-3 py-2.5 text-xs text-slate-400">{p.proposedAt}</td>
+                        <td className="px-3 py-2.5 text-xs text-slate-400">{p.approvedBy||"—"}</td>
                       </tr>
                     );
                   })}
-                  {/* Subtotal row per month */}
                   <tr className="bg-slate-50 border-t border-slate-200">
-                    <td colSpan={4} className="px-4 py-2 text-xs font-black text-slate-500">
-                      Sub-total · {monthKey} ({proposals.length} doctors)
-                    </td>
-                    <td className="px-4 py-2 font-black text-blue-700">{inr(monthSubtotals[monthKey])}</td>
+                    <td colSpan={4} className="px-3 py-2 text-xs font-black text-slate-500">Sub-total · {monthKey} ({props.length} doctors)</td>
+                    <td className="px-3 py-2 font-black text-blue-700">{inr(monthSubtotals[monthKey])}</td>
                     <td colSpan={3}></td>
                   </tr>
                 </React.Fragment>
               ))}
             </tbody>
-            {filtered.length > 0 && (
+            {filtered.length>0 && (
               <tfoot>
                 <tr className="bg-blue-50 border-t-2 border-blue-200">
-                  <td colSpan={4} className="px-4 py-3 text-xs font-black text-blue-800">Grand Total ({filtered.length} proposals)</td>
-                  <td className="px-4 py-3 font-black text-blue-700">{inr(grandTotal)}</td>
+                  <td colSpan={4} className="px-3 py-3 text-xs font-black text-blue-800">Grand Total ({filtered.length})</td>
+                  <td className="px-3 py-3 font-black text-blue-700">{inr(grandTotal)}</td>
                   <td colSpan={3}></td>
                 </tr>
               </tfoot>
@@ -731,21 +901,21 @@ function MyProposalsView({myProposals}) {
 }
 
 /* ══════════════════════════════════════════════════════
-   APPROVE VIEW (ADMIN)
+   APPROVE VIEW
 ══════════════════════════════════════════════════════ */
-function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, notify, setConfirm}) {
-  const [tab,        setTab]        = useState("pending");
-  const [hqFilter,   setHqFilter]   = useState("");
-  const [monthFilter,setMonthFilter]= useState("");
-  const [issuedAmts, setIssuedAmts] = useState({}); // pid → amount
+function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, setConfirm}) {
+  const [tab,         setTab]         = useState("pending");
+  const [hqFilter,    setHqFilter]    = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
+  const [issuedAmts,  setIssuedAmts]  = useState({});
 
-  const getDoc = (key) => DOCTOR_MASTER.find(d => d.name+"___"+d.hq === key);
+  const getDoc = (key) => DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===key);
+  const statusMap = {pending:"Proposed",approved:"Approved",confirmed:"Confirmed",all:null};
 
   const filtered = useMemo(() => {
-    const statusMap = {pending:"Proposed",approved:"Approved",confirmed:"Confirmed",all:null};
     let list = proposalList;
     if (tab!=="all") list = list.filter(p=>p.status===statusMap[tab]);
-    if (hqFilter) list = list.filter(p => { const d=getDoc(p.doctorKey); return d?.hq===hqFilter; });
+    if (hqFilter)    list = list.filter(p=>getDoc(p.doctorKey)?.hq===hqFilter);
     if (monthFilter) list = list.filter(p=>p.month===monthFilter);
     return list;
   }, [proposalList, tab, hqFilter, monthFilter]);
@@ -758,36 +928,34 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, n
   }), [proposalList]);
 
   const handleConfirm = (p) => {
-    const issued = issuedAmts[p.id] !== undefined ? Number(issuedAmts[p.id]) : Number(p.entries?.[0]?.proposed||0);
+    const issued = issuedAmts[p.id]!==undefined ? Number(issuedAmts[p.id]) : Number(p.entries?.[0]?.proposed||0);
+    const doc = getDoc(p.doctorKey);
     setConfirm({
-      msg: `Confirm & issue ₹${issued.toLocaleString("en-IN")} to ${getDoc(p.doctorKey)?.name}?`,
-      okLabel: "Confirm & Issue",
-      onOk: () => onConfirm(p.id, [{issued, proposed: p.entries?.[0]?.proposed}])
+      msg:`Confirm & issue ${inr(issued)} to ${doc?.name}?`,
+      okLabel:"Confirm & Issue",
+      onOk:()=>onConfirm(p.id,[{issued,proposed:p.entries?.[0]?.proposed}])
     });
   };
 
   return (
     <div>
       <h1 className="text-xl font-black text-slate-800 mb-1">Approve Proposals</h1>
-      <p className="text-sm text-slate-400 mb-4">Review, approve, and confirm CRM issuances</p>
+      <p className="text-sm text-slate-400 mb-4">Review, approve and confirm CRM issuances</p>
 
       <div className="flex flex-wrap gap-2 mb-4">
         {[["pending","⏳ Pending"],["approved","✅ Approved"],["confirmed","🎯 Confirmed"],["all","All"]].map(([v,l])=>(
           <button key={v} onClick={()=>setTab(v)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors
-              ${tab===v?"bg-blue-600 text-white border-blue-600":"bg-white text-slate-500 border-slate-200 hover:bg-slate-50"}`}>
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${tab===v?"bg-blue-600 text-white border-blue-600":"bg-white text-slate-500 border-slate-200"}`}>
             {l} ({tabCounts[v]})
           </button>
         ))}
         <select value={hqFilter} onChange={e=>setHqFilter(e.target.value)}
           className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
-          <option value="">All HQs</option>
-          {HQ_LIST.map(h=><option key={h}>{h}</option>)}
+          <option value="">All HQs</option>{HQ_LIST.map(h=><option key={h}>{h}</option>)}
         </select>
         <select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)}
           className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
-          <option value="">All Months</option>
-          {MONTHS.map(m=><option key={m}>{m}</option>)}
+          <option value="">All Months</option>{MONTHS.map(m=><option key={m}>{m}</option>)}
         </select>
       </div>
 
@@ -795,7 +963,7 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, n
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>{["Doctor","HQ","Month","Proposed","Status","Actual Issued","Proposed By","Action"].map(h=>(
+              <tr>{["Doctor","HQ","Month","Year","Proposed","Status","Issued Amt","By","Action"].map(h=>(
                 <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
               ))}</tr>
             </thead>
@@ -810,40 +978,36 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, n
                     <td className="px-3 py-2.5 font-semibold text-slate-800">{doc?.name||"—"}</td>
                     <td className="px-3 py-2.5 text-xs text-slate-400">{doc?.hq}</td>
                     <td className="px-3 py-2.5 text-xs text-slate-500">{p.month}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-400">{p.year||"FY 2026-27"}</td>
                     <td className="px-3 py-2.5 font-bold text-slate-700">{inr(proposed)}</td>
-                    <td className="px-3 py-2.5"><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{p.status}</span></td>
+                    <td className="px-3 py-2.5"><span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{p.status}</span></td>
                     <td className="px-3 py-2.5">
-                      {p.status===STATUSES.APPROVED ? (
-                        <input type="number"
-                          value={issuedAmts[p.id]!==undefined ? issuedAmts[p.id] : proposed}
+                      {p.status===STATUSES.APPROVED?(
+                        <input type="number" value={issuedAmts[p.id]!==undefined?issuedAmts[p.id]:proposed}
                           onChange={e=>setIssuedAmts(prev=>({...prev,[p.id]:e.target.value}))}
-                          className="w-28 px-2 py-1 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"/>
-                      ) : confirmed_issued ? (
+                          className="w-24 px-2 py-1 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"/>
+                      ):confirmed_issued?(
                         <span className="font-bold text-emerald-700">{inr(confirmed_issued)}</span>
-                      ) : <span className="text-slate-300">—</span>}
+                      ):<span className="text-slate-300">—</span>}
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-slate-400">{p.proposedBy}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-400">{p.proposedBy?.split("@")[0]}</td>
                     <td className="px-3 py-2.5">
-                      <div className="flex gap-1.5 flex-wrap">
-                        {p.status===STATUSES.PROPOSED && (
+                      <div className="flex gap-1 flex-wrap">
+                        {p.status===STATUSES.PROPOSED&&(
                           <>
-                            <button onClick={()=>onApprove(p.id)}
-                              className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700">Approve</button>
-                            <button onClick={()=>setConfirm({msg:`Reject "${doc?.name}" proposal?`,okLabel:"Reject",onOk:()=>onReject(p.id)})}
-                              className="px-2.5 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-lg hover:bg-slate-200">Reject</button>
+                            <button onClick={()=>onApprove(p.id)} className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg">Approve</button>
+                            <button onClick={()=>setConfirm({msg:`Reject "${doc?.name}"?`,okLabel:"Reject",onOk:()=>onReject(p.id)})}
+                              className="px-2 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-lg">Reject</button>
                           </>
                         )}
-                        {p.status===STATUSES.APPROVED && (
+                        {p.status===STATUSES.APPROVED&&(
                           <>
-                            <button onClick={()=>handleConfirm(p)}
-                              className="px-2.5 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700">Confirm</button>
-                            <button onClick={()=>setConfirm({msg:`Revert "${doc?.name}" to Proposed?`,okLabel:"Revert",onOk:()=>onReject(p.id)})}
-                              className="px-2.5 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-lg">Undo</button>
+                            <button onClick={()=>handleConfirm(p)} className="px-2 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg">Confirm</button>
+                            <button onClick={()=>setConfirm({msg:`Undo approval for "${doc?.name}"?`,okLabel:"Undo",onOk:()=>onReject(p.id)})}
+                              className="px-2 py-1 bg-slate-100 text-slate-400 text-xs font-bold rounded-lg">Undo</button>
                           </>
                         )}
-                        {p.status===STATUSES.CONFIRMED && (
-                          <span className="text-xs text-emerald-600 font-bold">✓ Done</span>
-                        )}
+                        {p.status===STATUSES.CONFIRMED&&<span className="text-xs text-emerald-600 font-bold">✓ Done</span>}
                       </div>
                     </td>
                   </tr>
@@ -859,36 +1023,32 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, n
 }
 
 /* ══════════════════════════════════════════════════════
-   TRACKER VIEW (ADMIN)
+   TRACKER VIEW
 ══════════════════════════════════════════════════════ */
 function TrackerView({stats, biharStats, proposalList}) {
-  const [groupBy, setGroupBy] = useState("hq"); // hq | asm | month
+  const [groupBy, setGroupBy] = useState("hq");
 
-  // Month-wise breakdown
   const monthStats = useMemo(() => {
-    const ms = {};
-    MONTHS.forEach(m => ms[m] = {proposed:0,approved:0,confirmed:0,count:0});
+    const ms = {}; MONTHS.forEach(m=>ms[m]={proposed:0,approved:0,confirmed:0,count:0});
     proposalList.forEach(p => {
       if (!ms[p.month]) return;
-      const a = p.entries?.[0]?.proposed||0;
-      const i = p.issuedEntries?.[0]?.issued||a;
-      if (p.status===STATUSES.PROPOSED||p.status===STATUSES.APPROVED||p.status===STATUSES.CONFIRMED)
-        ms[p.month].proposed+=a;
-      if (p.status===STATUSES.APPROVED||p.status===STATUSES.CONFIRMED)
-        ms[p.month].approved+=a;
-      if (p.status===STATUSES.CONFIRMED) { ms[p.month].confirmed+=i; ms[p.month].count++; }
+      const a=p.entries?.[0]?.proposed||0;
+      const i=p.issuedEntries?.[0]?.issued||a;
+      if ([STATUSES.PROPOSED,STATUSES.APPROVED,STATUSES.CONFIRMED].includes(p.status)) ms[p.month].proposed+=a;
+      if ([STATUSES.APPROVED,STATUSES.CONFIRMED].includes(p.status)) ms[p.month].approved+=a;
+      if (p.status===STATUSES.CONFIRMED){ms[p.month].confirmed+=i;ms[p.month].count++;}
     });
     return ms;
   }, [proposalList]);
 
   const asmStats = useMemo(() => {
-    const asms = {"ASM Darbhanga":{plan:0,proposed:0,approved:0,confirmed:0},"ASM Saharsa":{plan:0,proposed:0,approved:0,confirmed:0},"ASM Patna":{plan:0,proposed:0,approved:0,confirmed:0}};
-    HQ_LIST.forEach(hq => {
-      const asm = ASM_MAP[hq];
-      asms[asm].plan += HQ_PLAN[hq];
-      asms[asm].proposed  += stats[hq]?.proposed||0;
-      asms[asm].approved  += stats[hq]?.approved||0;
-      asms[asm].confirmed += stats[hq]?.confirmed||0;
+    const asms={"ASM Darbhanga":{plan:0,proposed:0,approved:0,confirmed:0},"ASM Saharsa":{plan:0,proposed:0,approved:0,confirmed:0},"ASM Patna":{plan:0,proposed:0,approved:0,confirmed:0}};
+    HQ_LIST.forEach(hq=>{
+      const asm=ASM_MAP[hq];
+      asms[asm].plan+=HQ_PLAN[hq];
+      asms[asm].proposed+=stats[hq]?.proposed||0;
+      asms[asm].approved+=stats[hq]?.approved||0;
+      asms[asm].confirmed+=stats[hq]?.confirmed||0;
     });
     return asms;
   }, [stats]);
@@ -896,10 +1056,8 @@ function TrackerView({stats, biharStats, proposalList}) {
   return (
     <div>
       <h1 className="text-xl font-black text-slate-800 mb-1">Tracker</h1>
-      <p className="text-sm text-slate-400 mb-5">Month-wise CRM26 tracking with utilisation</p>
-
-      {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <p className="text-sm text-slate-400 mb-4">Month-wise CRM26 with utilisation</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <p className="text-xs font-bold uppercase text-slate-400 mb-1">Bihar Plan</p>
           <p className="text-2xl font-black text-slate-800">{inrL(BIHAR_TOTAL)}</p>
@@ -912,8 +1070,6 @@ function TrackerView({stats, biharStats, proposalList}) {
           </div>
         ))}
       </div>
-
-      {/* Toggle */}
       <div className="flex gap-1 mb-4 bg-slate-100 p-1 rounded-xl w-fit">
         {[["hq","By HQ"],["asm","By ASM"],["month","By Month"]].map(([v,l])=>(
           <button key={v} onClick={()=>setGroupBy(v)}
@@ -921,51 +1077,47 @@ function TrackerView({stats, biharStats, proposalList}) {
         ))}
       </div>
 
-      {/* HQ Table */}
       {groupBy==="hq" && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>{["HQ","ASM","Plan CRM26","Proposed","Approved","Confirmed","HQ Util%","Bihar Util%"].map(h=>(
-                  <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
+                <tr>{["HQ","ASM","Plan","Proposed","Approved","Confirmed","HQ Util%","Bihar%"].map(h=>(
+                  <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
                 ))}</tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {HQ_LIST.map(hq=>{
                   const s=stats[hq]||{plan:0,proposed:0,approved:0,confirmed:0};
-                  const hqUtil=s.plan>0?Math.round(s.confirmed/s.plan*100):0;
-                  const biharUtil=Math.round(s.confirmed/BIHAR_TOTAL*100);
+                  const u=s.plan>0?Math.round(s.confirmed/s.plan*100):0;
                   return (
                     <tr key={hq} className="hover:bg-slate-50">
-                      <td className="px-4 py-2.5 font-semibold text-slate-800">{hq}</td>
-                      <td className="px-4 py-2.5 text-xs text-slate-400">{ASM_MAP[hq]}</td>
-                      <td className="px-4 py-2.5 font-bold text-slate-700">{inrL(s.plan)}</td>
-                      <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{inrL(s.proposed)}</span></td>
-                      <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{inrL(s.approved)}</span></td>
-                      <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">{inrL(s.confirmed)}</span></td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-14 bg-slate-100 rounded-full h-1.5">
-                            <div className="bg-emerald-500 h-1.5 rounded-full" style={{width:`${Math.min(hqUtil,100)}%`}}/>
-                          </div>
-                          <span className={`text-xs font-bold ${hqUtil>=80?"text-emerald-600":hqUtil>=50?"text-amber-600":"text-slate-400"}`}>{hqUtil}%</span>
+                      <td className="px-3 py-2.5 font-semibold text-slate-800">{hq}</td>
+                      <td className="px-3 py-2.5 text-xs text-slate-400">{ASM_MAP[hq]}</td>
+                      <td className="px-3 py-2.5 font-bold text-slate-700">{inrL(s.plan)}</td>
+                      <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{inrL(s.proposed)}</span></td>
+                      <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{inrL(s.approved)}</span></td>
+                      <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">{inrL(s.confirmed)}</span></td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-12 bg-slate-100 rounded-full h-1.5"><div className="bg-emerald-500 h-1.5 rounded-full" style={{width:`${Math.min(u,100)}%`}}/></div>
+                          <span className={`text-xs font-bold ${u>=80?"text-emerald-600":u>=50?"text-amber-600":"text-slate-400"}`}>{u}%</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 text-xs font-bold text-blue-600">{biharUtil}%</td>
+                      <td className="px-3 py-2.5 text-xs font-bold text-blue-600">{Math.round(s.confirmed/BIHAR_TOTAL*100)}%</td>
                     </tr>
                   );
                 })}
               </tbody>
               <tfoot>
                 <tr className="bg-blue-50 border-t-2 border-blue-200 font-black">
-                  <td className="px-4 py-3 text-blue-800" colSpan={2}>Bihar Total</td>
-                  <td className="px-4 py-3">{inrL(BIHAR_TOTAL)}</td>
-                  <td className="px-4 py-3 text-amber-700">{inrL(biharStats.proposed)}</td>
-                  <td className="px-4 py-3 text-blue-700">{inrL(biharStats.approved)}</td>
-                  <td className="px-4 py-3 text-emerald-700">{inrL(biharStats.confirmed)}</td>
-                  <td className="px-4 py-3 text-emerald-700">{((biharStats.confirmed/BIHAR_TOTAL)*100).toFixed(1)}%</td>
-                  <td className="px-4 py-3"></td>
+                  <td className="px-3 py-3 text-blue-800" colSpan={2}>Bihar Total</td>
+                  <td className="px-3 py-3">{inrL(BIHAR_TOTAL)}</td>
+                  <td className="px-3 py-3 text-amber-700">{inrL(biharStats.proposed)}</td>
+                  <td className="px-3 py-3 text-blue-700">{inrL(biharStats.approved)}</td>
+                  <td className="px-3 py-3 text-emerald-700">{inrL(biharStats.confirmed)}</td>
+                  <td className="px-3 py-3 text-emerald-700">{((biharStats.confirmed/BIHAR_TOTAL)*100).toFixed(1)}%</td>
+                  <td></td>
                 </tr>
               </tfoot>
             </table>
@@ -973,41 +1125,39 @@ function TrackerView({stats, biharStats, proposalList}) {
         </div>
       )}
 
-      {/* ASM Table */}
       {groupBy==="asm" && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>{["ASM","Plan CRM26","Proposed","Approved","Confirmed","Util%"].map(h=>(
-                  <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
+                <tr>{["ASM/HQ","Plan","Proposed","Approved","Confirmed","Util%"].map(h=>(
+                  <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
                 ))}</tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {Object.entries(asmStats).map(([asm,s])=>{
-                  const util=s.plan>0?Math.round(s.confirmed/s.plan*100):0;
-                  const hqsUnder = HQ_LIST.filter(h=>ASM_MAP[h]===asm);
+                  const u=s.plan>0?Math.round(s.confirmed/s.plan*100):0;
                   return (
                     <React.Fragment key={asm}>
                       <tr className="bg-slate-50 font-black text-slate-700">
-                        <td className="px-4 py-2.5 text-blue-700">{asm}</td>
-                        <td className="px-4 py-2.5">{inrL(s.plan)}</td>
-                        <td className="px-4 py-2.5"><span className="text-amber-700">{inrL(s.proposed)}</span></td>
-                        <td className="px-4 py-2.5"><span className="text-blue-700">{inrL(s.approved)}</span></td>
-                        <td className="px-4 py-2.5"><span className="text-emerald-700">{inrL(s.confirmed)}</span></td>
-                        <td className="px-4 py-2.5 text-emerald-600">{util}%</td>
+                        <td className="px-3 py-2.5 text-blue-700">{asm}</td>
+                        <td className="px-3 py-2.5">{inrL(s.plan)}</td>
+                        <td className="px-3 py-2.5 text-amber-700">{inrL(s.proposed)}</td>
+                        <td className="px-3 py-2.5 text-blue-700">{inrL(s.approved)}</td>
+                        <td className="px-3 py-2.5 text-emerald-700">{inrL(s.confirmed)}</td>
+                        <td className="px-3 py-2.5 text-emerald-600">{u}%</td>
                       </tr>
-                      {hqsUnder.map(hq=>{
+                      {HQ_LIST.filter(h=>ASM_MAP[h]===asm).map(hq=>{
                         const hs=stats[hq]||{plan:0,proposed:0,approved:0,confirmed:0};
                         const hu=hs.plan>0?Math.round(hs.confirmed/hs.plan*100):0;
                         return (
                           <tr key={hq} className="hover:bg-slate-50">
-                            <td className="px-4 py-2 pl-10 text-slate-500 text-xs">↳ {hq}</td>
-                            <td className="px-4 py-2 text-xs text-slate-500">{inrL(hs.plan)}</td>
-                            <td className="px-4 py-2 text-xs text-amber-600">{inrL(hs.proposed)}</td>
-                            <td className="px-4 py-2 text-xs text-blue-600">{inrL(hs.approved)}</td>
-                            <td className="px-4 py-2 text-xs text-emerald-600">{inrL(hs.confirmed)}</td>
-                            <td className="px-4 py-2 text-xs text-slate-400">{hu}%</td>
+                            <td className="px-3 py-2 pl-8 text-slate-500 text-xs">↳ {hq}</td>
+                            <td className="px-3 py-2 text-xs text-slate-500">{inrL(hs.plan)}</td>
+                            <td className="px-3 py-2 text-xs text-amber-600">{inrL(hs.proposed)}</td>
+                            <td className="px-3 py-2 text-xs text-blue-600">{inrL(hs.approved)}</td>
+                            <td className="px-3 py-2 text-xs text-emerald-600">{inrL(hs.confirmed)}</td>
+                            <td className="px-3 py-2 text-xs text-slate-400">{hu}%</td>
                           </tr>
                         );
                       })}
@@ -1020,40 +1170,29 @@ function TrackerView({stats, biharStats, proposalList}) {
         </div>
       )}
 
-      {/* Month Table */}
       {groupBy==="month" && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>{["Month","Proposed","Approved","Confirmed","Doctors Issued"].map(h=>(
-                  <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
+                <tr>{["Month","Proposed","Approved","Confirmed","Doctors"].map(h=>(
+                  <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
                 ))}</tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {MONTHS.map(m=>{
                   const ms=monthStats[m]||{proposed:0,approved:0,confirmed:0,count:0};
-                  const hasData=ms.proposed>0||ms.approved>0||ms.confirmed>0;
                   return (
-                    <tr key={m} className={`hover:bg-slate-50 ${!hasData?"opacity-40":""}`}>
-                      <td className="px-4 py-2.5 font-semibold text-slate-700">{m}</td>
-                      <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{inrL(ms.proposed)}</span></td>
-                      <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{inrL(ms.approved)}</span></td>
-                      <td className="px-4 py-2.5"><span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">{inrL(ms.confirmed)}</span></td>
-                      <td className="px-4 py-2.5 text-slate-500 text-xs">{ms.count} doctors</td>
+                    <tr key={m} className={`hover:bg-slate-50 ${!ms.proposed&&!ms.confirmed?"opacity-40":""}`}>
+                      <td className="px-3 py-2.5 font-semibold text-slate-700">{m}</td>
+                      <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700">{inrL(ms.proposed)}</span></td>
+                      <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">{inrL(ms.approved)}</span></td>
+                      <td className="px-3 py-2.5"><span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">{inrL(ms.confirmed)}</span></td>
+                      <td className="px-3 py-2.5 text-slate-500 text-xs">{ms.count}</td>
                     </tr>
                   );
                 })}
               </tbody>
-              <tfoot>
-                <tr className="bg-blue-50 border-t-2 border-blue-200 font-black">
-                  <td className="px-4 py-3 text-blue-800">Total</td>
-                  <td className="px-4 py-3 text-amber-700">{inrL(biharStats.proposed)}</td>
-                  <td className="px-4 py-3 text-blue-700">{inrL(biharStats.approved)}</td>
-                  <td className="px-4 py-3 text-emerald-700">{inrL(biharStats.confirmed)}</td>
-                  <td className="px-4 py-3 text-slate-600">{proposalList.filter(p=>p.status===STATUSES.CONFIRMED).length} total</td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         </div>
@@ -1062,8 +1201,267 @@ function TrackerView({stats, biharStats, proposalList}) {
   );
 }
 
+/* ══════════════════════════════════════════════════════
+   SALES TRACK VIEW
+══════════════════════════════════════════════════════ */
+function SalesTrackView({salesData, onSave, isAdmin, notify, setConfirm}) {
+  const [hqFilter,    setHqFilter]    = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
+  const [year,        setYear]        = useState("FY 2026-27");
+  const [uploading,   setUploading]   = useState(false);
+  const [uploadMode,  setUploadMode]  = useState("sku"); // sku | value
+  const fileRef = useRef();
+
+  // salesData structure: { "FY 2026-27": { "doctorKey": { "Apr": 12345, "May": 6789 } } }
+  const yearData = salesData[year] || {};
+
+  const getActual = (doctorKey, month) => yearData[doctorKey]?.[month] || 0;
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const buf = await file.arrayBuffer();
+      const wb  = XLSX.read(buf, {type:"array"});
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:""});
+
+      const newYearData = JSON.parse(JSON.stringify(yearData)); // deep clone
+
+      if (uploadMode==="sku") {
+        // Columns: HQ, Doctor Name, Month, Product Name, Qty
+        rows.forEach(row => {
+          const hq      = String(row["HQ"]||row["hq"]||row["Hq"]||"").trim();
+          const name    = String(row["Doctor Name"]||row["DOCTOR NAME"]||row["doctor name"]||row["Doctor"]||"").trim();
+          const month   = String(row["Month"]||row["MONTH"]||row["month"]||"").trim();
+          const product = String(row["Product Name"]||row["PRODUCT NAME"]||row["Product"]||row["product"]||"").trim();
+          const qty     = Number(row["Qty"]||row["QTY"]||row["qty"]||row["Quantity"]||0);
+          if (!name||!month||!product||qty<=0) return;
+          const ptr = getPTR(product);
+          if (ptr<=0) return;
+          const value = Math.round(qty * ptr);
+          const key   = name+"___"+hq;
+          if (!newYearData[key]) newYearData[key]={};
+          newYearData[key][month] = (newYearData[key][month]||0) + value;
+        });
+      } else {
+        // Value mode: Columns: HQ, Doctor Name, + month columns (Apr, May, ...)
+        rows.forEach(row => {
+          const hq   = String(row["HQ"]||row["hq"]||"").trim();
+          const name = String(row["Doctor Name"]||row["Doctor"]||row["DOCTOR NAME"]||"").trim();
+          if (!name) return;
+          const key = name+"___"+hq;
+          MONTHS.forEach(m => {
+            const val = Number(row[m]||row[m.toUpperCase()]||0);
+            if (val > 0) {
+              if (!newYearData[key]) newYearData[key]={};
+              // SKU overrides value — only set if no SKU data present
+              // We mark value-mode entries with _src suffix check (simple: just set if 0)
+              if (!newYearData[key][m]) newYearData[key][m] = val;
+            }
+          });
+        });
+      }
+
+      const newSalesData = {...salesData, [year]: newYearData};
+      onSave(newSalesData);
+      notify(`✅ Sales data uploaded (${uploadMode==="sku"?"SKU-wise":"Value-wise"})`);
+    } catch(err) {
+      console.error(err);
+      notify("Upload failed — check file format","red");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value="";
+    }
+  };
+
+  const clearData = () => {
+    setConfirm({
+      msg:`Clear all sales data for ${year}? This cannot be undone.`,
+      okLabel:"Clear All",
+      onOk:() => {
+        const newSalesData = {...salesData};
+        delete newSalesData[year];
+        onSave(newSalesData);
+        notify("Sales data cleared","red");
+      }
+    });
+  };
+
+  // Filtered doctors
+  const doctors = useMemo(() => {
+    let list = DOCTOR_MASTER;
+    if (hqFilter) list = list.filter(d=>d.hq===hqFilter);
+    return list;
+  }, [hqFilter]);
+
+  // Months to display — either filtered single month or all uploaded months
+  const uploadedMonths = useMemo(() => {
+    const ms = new Set();
+    Object.values(yearData).forEach(d => Object.keys(d).forEach(m=>ms.add(m)));
+    return MONTHS.filter(m=>ms.has(m));
+  }, [yearData]);
+
+  const displayMonths = monthFilter ? [monthFilter] : uploadedMonths;
+
+  return (
+    <div>
+      <h1 className="text-xl font-black text-slate-800 mb-1">Sales Track</h1>
+      <p className="text-sm text-slate-400 mb-4">Doctor-wise actual vs plan PTR tracking</p>
+
+      {/* Upload section */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 mb-4">
+        <h3 className="font-black text-slate-700 text-sm mb-3">📥 Upload Sales Data</h3>
+        <div className="flex flex-wrap gap-3 items-center">
+          <select value={year} onChange={e=>setYear(e.target.value)}
+            className="px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none font-semibold">
+            {YEARS.map(y=><option key={y}>{y}</option>)}
+          </select>
+          <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+            {[["sku","📦 SKU-wise"],["value","💰 Value-wise"]].map(([v,l])=>(
+              <button key={v} onClick={()=>setUploadMode(v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${uploadMode===v?"bg-white text-blue-700 shadow-sm":"text-slate-500"}`}>{l}</button>
+            ))}
+          </div>
+          <label className={`px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-colors ${uploading?"bg-slate-200 text-slate-400":"bg-blue-600 hover:bg-blue-700 text-white"}`}>
+            {uploading?"Uploading…":"📤 Upload Excel"}
+            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileUpload} disabled={uploading}/>
+          </label>
+          {isAdmin && Object.keys(yearData).length>0 && (
+            <button onClick={clearData} className="px-3 py-2 text-xs font-bold text-red-500 border border-red-200 rounded-xl hover:bg-red-50">🗑️ Clear {year}</button>
+          )}
+        </div>
+        <div className="mt-2 text-xs text-slate-400">
+          {uploadMode==="sku"
+            ? "SKU mode columns: HQ, Doctor Name, Month, Product Name, Qty — app computes PTR value"
+            : "Value mode columns: HQ, Doctor Name, Apr, May, Jun… (monthly PTR values) — SKU upload overrides this"}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <select value={hqFilter} onChange={e=>setHqFilter(e.target.value)}
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
+          <option value="">All HQs</option>{HQ_LIST.map(h=><option key={h}>{h}</option>)}
+        </select>
+        <select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)}
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
+          <option value="">All Months</option>{MONTHS.map(m=><option key={m}>{m}</option>)}
+        </select>
+        {(hqFilter||monthFilter) && (
+          <button onClick={()=>{setHqFilter("");setMonthFilter("");}} className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-slate-400 hover:text-red-500 bg-white">✕ Clear</button>
+        )}
+        {uploadedMonths.length>0 && (
+          <span className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-700 font-semibold">
+            Data available: {uploadedMonths.join(", ")}
+          </span>
+        )}
+      </div>
+
+      {displayMonths.length===0 ? (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
+          <div className="text-4xl mb-3">📊</div>
+          <p className="font-bold text-slate-400 mb-1">No sales data uploaded yet</p>
+          <p className="text-xs text-slate-300">Upload an Excel file above to start tracking</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400 sticky left-0 bg-slate-50">Doctor</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">HQ</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">Plan/mo</th>
+                  {displayMonths.map(m => (
+                    <th key={m} colSpan={3} className="px-3 py-2.5 text-center text-xs font-bold uppercase text-slate-400 border-l border-slate-200">{m}</th>
+                  ))}
+                  {displayMonths.length>1 && <th colSpan={3} className="px-3 py-2.5 text-center text-xs font-bold uppercase text-blue-400 border-l border-slate-200">Overall</th>}
+                </tr>
+                <tr className="border-b border-slate-100">
+                  <th className="px-3 py-1.5 sticky left-0 bg-slate-50"></th>
+                  <th className="px-3 py-1.5"></th>
+                  <th className="px-3 py-1.5"></th>
+                  {displayMonths.map(m=>(
+                    <React.Fragment key={m}>
+                      <th className="px-2 py-1.5 text-xs text-slate-400 font-semibold border-l border-slate-200">Plan</th>
+                      <th className="px-2 py-1.5 text-xs text-slate-400 font-semibold">Actual</th>
+                      <th className="px-2 py-1.5 text-xs text-slate-400 font-semibold">Ach%</th>
+                    </React.Fragment>
+                  ))}
+                  {displayMonths.length>1 && (
+                    <>
+                      <th className="px-2 py-1.5 text-xs text-blue-400 font-semibold border-l border-slate-200">Plan</th>
+                      <th className="px-2 py-1.5 text-xs text-blue-400 font-semibold">Actual</th>
+                      <th className="px-2 py-1.5 text-xs text-blue-400 font-semibold">Ach%</th>
+                    </>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {doctors.map(doc => {
+                  const key = doc.name+"___"+doc.hq;
+                  const plan = doc.sales26;
+                  let totalPlan=0, totalActual=0;
+                  displayMonths.forEach(m=>{ totalPlan+=plan; totalActual+=getActual(key,m); });
+                  const overallPct = pct(totalActual, totalPlan);
+                  const hasAny = displayMonths.some(m=>getActual(key,m)>0);
+
+                  return (
+                    <tr key={key} className={`hover:bg-slate-50 ${!hasAny?"opacity-50":""}`}>
+                      <td className="px-3 py-2.5 font-semibold text-slate-800 sticky left-0 bg-white text-xs">{doc.name}</td>
+                      <td className="px-3 py-2.5 text-xs text-slate-400">{doc.hq}</td>
+                      <td className="px-3 py-2.5 text-xs font-bold text-slate-600">{plan>0?inr(plan):<span className="text-slate-300">—</span>}</td>
+                      {displayMonths.map(m=>{
+                        const act = getActual(key,m);
+                        const p   = pct(act, plan);
+                        return (
+                          <React.Fragment key={m}>
+                            <td className="px-2 py-2.5 text-xs text-slate-500 border-l border-slate-100">{plan>0?inr(plan):"—"}</td>
+                            <td className="px-2 py-2.5 text-xs font-bold text-slate-700">{act>0?inr(act):<span className="text-slate-300">—</span>}</td>
+                            <td className="px-2 py-2.5">
+                              {p!==null ? (
+                                <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${achColor(p)}`}>{p}%</span>
+                              ):<span className="text-slate-200 text-xs">—</span>}
+                            </td>
+                          </React.Fragment>
+                        );
+                      })}
+                      {displayMonths.length>1 && (
+                        <>
+                          <td className="px-2 py-2.5 text-xs font-bold text-blue-600 border-l border-slate-100">{inr(totalPlan)}</td>
+                          <td className="px-2 py-2.5 text-xs font-bold text-slate-800">{totalActual>0?inr(totalActual):"—"}</td>
+                          <td className="px-2 py-2.5">
+                            {overallPct!==null&&totalActual>0?(
+                              <div>
+                                <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${achColor(overallPct)}`}>{overallPct}%</span>
+                                <div className="text-xs mt-0.5 font-semibold" style={{fontSize:"9px"}}>{achLabel(overallPct)}</div>
+                              </div>
+                            ):<span className="text-slate-200 text-xs">—</span>}
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex gap-3 mt-3 flex-wrap">
+        {[["bg-purple-100 text-purple-700","🏆 Exceptional (100%+)"],["bg-emerald-100 text-emerald-700","🌟 Excellent (90-99%)"],["bg-blue-100 text-blue-700","✅ Good (80-89%)"],["bg-red-100 text-red-600","⚠️ Below 80%"]].map(([cls,lbl])=>(
+          <span key={lbl} className={`px-2 py-1 rounded-lg text-xs font-bold ${cls}`}>{lbl}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
-<!-- CRM 26 v1.0 - deployed Sat Apr  4 03:08:34 UTC 2026 -->
