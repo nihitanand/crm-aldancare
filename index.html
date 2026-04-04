@@ -54,6 +54,8 @@ const HQ_PLAN = {
 };
 const BIHAR_TOTAL = 4950000;
 const MONTHS = ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
+const YEARS  = ["FY 2025-26","FY 2026-27","FY 2027-28"];
+const APP_VERSION = "v1.1";
 const STATUSES = {PROPOSED:"Proposed",APPROVED:"Approved",CONFIRMED:"Confirmed"};
 const STATUS_COLORS = {
   Proposed:  {bg:"bg-amber-100",  text:"text-amber-700",  dot:"bg-amber-500"},
@@ -136,17 +138,17 @@ function App() {
     return proposalList.filter(p => p.proposedBy === user.email);
   }, [proposalList, user]);
 
-  const addProposal = (doctorKey, entries, month) => {
+  const addProposal = (doctorKey, entries, month, year) => {
     // entries: array of {proposed, issued}
     const existing = Object.values(proposals).find(p =>
-      p.doctorKey === doctorKey && p.month === month
+      p.doctorKey === doctorKey && p.month === month && p.year === year
     );
     if (existing) {
       save(existing.id, {...existing, entries, updatedAt:now()});
     } else {
       const id = uid();
       save(id, {
-        id, doctorKey, month,
+        id, doctorKey, month, year: year||"FY 2026-27",
         entries,           // [{proposed, issued}]  — issued defaults to proposed
         status: STATUSES.PROPOSED,
         proposedBy: user.email,
@@ -293,7 +295,8 @@ function App() {
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-3">
               <span className="text-lg font-black text-blue-700">💊 CRM 26</span>
-              <span className="text-slate-300 hidden sm:inline">|</span>
+              <span className="text-xs font-bold text-blue-400 bg-blue-50 px-1.5 py-0.5 rounded-md ml-1">{APP_VERSION}</span>
+              <span className="text-slate-300 hidden sm:inline mx-1">|</span>
               <span className="text-xs text-slate-400 hidden sm:inline font-semibold">Bihar · {isZSM?"ZSM":"Admin"}</span>
             </div>
             <div className="flex items-center gap-1">
@@ -436,6 +439,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
   const [hqFilter, setHqFilter] = useState("");
   const [search,   setSearch]   = useState("");
   const [month,    setMonth]    = useState(curMonth());
+  const [year,     setYear]     = useState("FY 2026-27");
   const [editing,  setEditing]  = useState(null); // doctorKey
   const [form,     setForm]     = useState({proposed:0, issued:0});
 
@@ -448,7 +452,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
   }, [hqFilter, search]);
 
   const getExisting = (doctorKey) => {
-    return Object.values(proposals).find(p => p.doctorKey===doctorKey && p.month===month);
+    return Object.values(proposals).find(p => p.doctorKey===doctorKey && p.month===month && p.year===year);
   };
 
   const startEdit = (doc) => {
@@ -463,7 +467,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
 
   const submitProposal = () => {
     if (!editing) return;
-    onSave(editing, [{proposed: Number(form.proposed), issued: Number(form.proposed)}], month);
+    onSave(editing, [{proposed: Number(form.proposed), issued: Number(form.proposed)}], month, year);
     setEditing(null);
   };
 
@@ -481,7 +485,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
               <div className="px-6 pt-5 pb-4 border-b border-slate-100">
                 <h2 className="font-black text-slate-800">Propose CRM – {doc?.name}</h2>
-                <p className="text-xs text-slate-400 mt-0.5">{doc?.hq} · {month}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{doc?.hq} · {month} {year}</p>
               </div>
               <div className="px-6 py-5 space-y-4">
                 <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-500 space-y-1">
@@ -508,12 +512,21 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
         );
       })()}
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
+      {/* Month + Year selector — prominent */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-4 flex flex-wrap gap-3 items-center">
+        <span className="text-xs font-black text-blue-700 uppercase tracking-widest">Proposing for:</span>
         <select value={month} onChange={e=>setMonth(e.target.value)}
-          className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white font-semibold">
+          className="px-3 py-2 border-2 border-blue-300 rounded-xl text-sm font-bold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
           {MONTHS.map(m=><option key={m}>{m}</option>)}
         </select>
+        <select value={year} onChange={e=>setYear(e.target.value)}
+          className="px-3 py-2 border-2 border-blue-300 rounded-xl text-sm font-bold text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+          {YEARS.map(y=><option key={y}>{y}</option>)}
+        </select>
+        <span className="text-xs text-blue-500 font-semibold">All proposals below will be tagged to this period</span>
+      </div>
+      {/* Other Filters */}
+      <div className="flex flex-wrap gap-3 mb-4">
         <select value={hqFilter} onChange={e=>setHqFilter(e.target.value)}
           className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white">
           <option value="">All HQs</option>
@@ -529,7 +542,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
               <tr>
-                {["HQ","Doctor","CRM25 Act","Plan CRM26",`${month} Status`,`${month} Amount`,"Action"].map(h=>(
+                {["HQ","Doctor","CRM25 Act","Plan CRM26",`${month} ${year} Status`,`${month} ${year} Amt`,"Action"].map(h=>(
                   <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
                 ))}
               </tr>
@@ -579,16 +592,54 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
 ══════════════════════════════════════════════════════ */
 function MyProposalsView({myProposals}) {
   const [filterStatus, setFilterStatus] = useState("all");
-  const filtered = filterStatus==="all" ? myProposals : myProposals.filter(p=>p.status===filterStatus);
+  const [filterMonth,  setFilterMonth]  = useState("");
+  const [filterHQ,     setFilterHQ]     = useState("");
+
+  const filtered = useMemo(() => {
+    return myProposals.filter(p => {
+      if (filterStatus !== "all" && p.status !== filterStatus) return false;
+      if (filterMonth && p.month !== filterMonth) return false;
+      if (filterHQ) {
+        const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq === p.doctorKey);
+        if (doc?.hq !== filterHQ) return false;
+      }
+      return true;
+    });
+  }, [myProposals, filterStatus, filterMonth, filterHQ]);
+
   const counts = {all:myProposals.length,Proposed:0,Approved:0,Confirmed:0};
   myProposals.forEach(p=>counts[p.status]++);
+
+  // Subtotals by month (from filtered list)
+  const monthSubtotals = useMemo(() => {
+    const mt = {};
+    filtered.forEach(p => {
+      const key = `${p.month} ${p.year||"FY 2026-27"}`;
+      mt[key] = (mt[key]||0) + Number(p.entries?.[0]?.proposed||0);
+    });
+    return mt;
+  }, [filtered]);
+
+  // Group filtered by month-year for subtotal rows
+  const groupedRows = useMemo(() => {
+    const groups = {};
+    filtered.forEach(p => {
+      const key = `${p.month} ${p.year||"FY 2026-27"}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    });
+    return groups;
+  }, [filtered]);
+
+  const grandTotal = filtered.reduce((s,p) => s + Number(p.entries?.[0]?.proposed||0), 0);
 
   return (
     <div>
       <h1 className="text-xl font-black text-slate-800 mb-1">My Proposals</h1>
       <p className="text-sm text-slate-400 mb-4">All CRM proposals submitted by you</p>
 
-      <div className="flex gap-2 mb-4 flex-wrap">
+      {/* Status filters */}
+      <div className="flex gap-2 mb-3 flex-wrap">
         {[["all","All",counts.all],["Proposed","Proposed",counts.Proposed],["Approved","Approved",counts.Approved],["Confirmed","Confirmed",counts.Confirmed]].map(([v,l,c])=>(
           <button key={v} onClick={()=>setFilterStatus(v)}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors
@@ -598,31 +649,79 @@ function MyProposalsView({myProposals}) {
         ))}
       </div>
 
+      {/* Month + HQ filters */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)}
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+          <option value="">All Months</option>
+          {MONTHS.map(m=><option key={m}>{m}</option>)}
+        </select>
+        <select value={filterHQ} onChange={e=>setFilterHQ(e.target.value)}
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-300">
+          <option value="">All HQs</option>
+          {HQ_LIST.map(h=><option key={h}>{h}</option>)}
+        </select>
+        {(filterMonth||filterHQ) && (
+          <button onClick={()=>{setFilterMonth("");setFilterHQ("");}}
+            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white text-slate-400 hover:text-red-500">
+            ✕ Clear
+          </button>
+        )}
+        {filtered.length>0 && (
+          <div className="ml-auto flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-1.5">
+            <span className="text-xs text-indigo-500 font-semibold">Filtered Total:</span>
+            <span className="text-sm font-black text-indigo-700">{inr(grandTotal)}</span>
+          </div>
+        )}
+      </div>
+
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>{["Doctor","HQ","Month","Proposed Amt","Status","Proposed On","Approved By"].map(h=>(
+              <tr>{["Doctor","HQ","Month","Year","Proposed Amt","Status","Proposed On","Approved By"].map(h=>(
                 <th key={h} className="px-4 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
               ))}</tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filtered.map(p => {
-                const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq === p.doctorKey);
-                const sc  = STATUS_COLORS[p.status];
-                return (
-                  <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 font-semibold text-slate-800">{doc?.name||p.doctorKey}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-500">{doc?.hq}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-500">{p.month}</td>
-                    <td className="px-4 py-2.5 font-bold text-slate-700">{inr(p.entries?.[0]?.proposed)}</td>
-                    <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{p.status}</span></td>
-                    <td className="px-4 py-2.5 text-xs text-slate-400">{p.proposedAt}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-400">{p.approvedBy||"—"}</td>
+              {Object.entries(groupedRows).map(([monthKey, proposals]) => (
+                <React.Fragment key={monthKey}>
+                  {proposals.map(p => {
+                    const doc = DOCTOR_MASTER.find(d => d.name+"___"+d.hq === p.doctorKey);
+                    const sc  = STATUS_COLORS[p.status];
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-2.5 font-semibold text-slate-800">{doc?.name||p.doctorKey}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-500">{doc?.hq}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-500">{p.month}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-400">{p.year||"FY 2026-27"}</td>
+                        <td className="px-4 py-2.5 font-bold text-slate-700">{inr(p.entries?.[0]?.proposed)}</td>
+                        <td className="px-4 py-2.5"><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{p.status}</span></td>
+                        <td className="px-4 py-2.5 text-xs text-slate-400">{p.proposedAt}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-400">{p.approvedBy||"—"}</td>
+                      </tr>
+                    );
+                  })}
+                  {/* Subtotal row per month */}
+                  <tr className="bg-slate-50 border-t border-slate-200">
+                    <td colSpan={4} className="px-4 py-2 text-xs font-black text-slate-500">
+                      Sub-total · {monthKey} ({proposals.length} doctors)
+                    </td>
+                    <td className="px-4 py-2 font-black text-blue-700">{inr(monthSubtotals[monthKey])}</td>
+                    <td colSpan={3}></td>
                   </tr>
-                );
-              })}
+                </React.Fragment>
+              ))}
             </tbody>
+            {filtered.length > 0 && (
+              <tfoot>
+                <tr className="bg-blue-50 border-t-2 border-blue-200">
+                  <td colSpan={4} className="px-4 py-3 text-xs font-black text-blue-800">Grand Total ({filtered.length} proposals)</td>
+                  <td className="px-4 py-3 font-black text-blue-700">{inr(grandTotal)}</td>
+                  <td colSpan={3}></td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
         {filtered.length===0 && <div className="text-center py-10 text-slate-300 text-sm">No proposals found</div>}
