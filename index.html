@@ -168,7 +168,7 @@ function App() {
 
   const addProposal = (doctorKey, entries, month, year) => {
     const existing = Object.values(proposals).find(p =>
-      p.doctorKey===doctorKey && p.month===month && p.year===year
+      p.doctorKey===doctorKey && p.month===month && (p.year||"FY 2026-27")===(year||"FY 2026-27")
     );
     if (existing) {
       saveProposal(existing.id, {...existing, entries, updatedAt:now()});
@@ -511,7 +511,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
 
   const getExisting = useCallback((doctorKey) => {
     if (!periodReady) return null;
-    return Object.values(proposals).find(p => p.doctorKey===doctorKey && p.month===month && p.year===year);
+    return Object.values(proposals).find(p => p.doctorKey===doctorKey && p.month===month && (p.year||"FY 2026-27")===(year||"FY 2026-27"));
   }, [proposals, month, year]);
 
   // Pending count per HQ for badge
