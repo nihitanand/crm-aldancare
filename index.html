@@ -32,11 +32,47 @@ const DB_PATH = "crm26/v1";
 const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
 /* ══════════════════════════════════════════════════════
+   SAMPLE FILE GENERATORS
+══════════════════════════════════════════════════════ */
+const downloadSampleSKU = () => {
+  const rows = [
+    ["HQ","Doctor Name","Month","Product Name","Qty"],
+    ["Siwan","MANJU SINGH","Apr","ALDOVA KIT TABS",5],
+    ["Siwan","MANJU SINGH","Apr","MYOLIFE TABS",10],
+    ["Siwan","RITA SINHA","Apr","LACORIA CAPS",8],
+    ["Purnea","DR.PRIYANKA JHA","Apr","OVALUX CAPS",12],
+    ["Purnea","DR.PRIYANKA JHA","Apr","ALDOVA DS KIT TABS",4],
+    ["Patna-2","DR.V.B GOLWARA","Apr","OSTEOFEM TABS",6],
+    ["Begusarai","RUPA SINGH","May","ALDOVA KIT TABS",7],
+    ["Begusarai","RUPA SINGH","May","ARGILUX SACHETS",3],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SKU Sales");
+  XLSX.writeFile(wb, "Sample_SKU_Sales_Import.xlsx");
+};
+
+const downloadSampleValue = () => {
+  const rows = [
+    ["HQ","Doctor Name","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"],
+    ["Siwan","MANJU SINGH",45000,48000,0,0,0,0,0,0,0,0,0,0],
+    ["Siwan","RITA SINHA",18000,0,22000,0,0,0,0,0,0,0,0,0],
+    ["Purnea","DR.PRIYANKA JHA",120000,115000,130000,0,0,0,0,0,0,0,0,0],
+    ["Patna-2","DR.V.B GOLWARA",28000,31000,0,0,0,0,0,0,0,0,0,0],
+    ["Begusarai","RUPA SINGH",55000,62000,58000,0,0,0,0,0,0,0,0,0],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Value Sales");
+  XLSX.writeFile(wb, "Sample_Value_Sales_Import.xlsx");
+};
+
+/* ══════════════════════════════════════════════════════
    CONSTANTS
 ══════════════════════════════════════════════════════ */
-const APP_VERSION = "v1.2";
+const APP_VERSION = "v1.3";
 const MONTHS  = ["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
-const YEARS   = ["FY 2025-26","FY 2026-27","FY 2027-28"];
+const YEARS   = ["FY 2026-27","FY 2027-28"];
 const HQ_LIST = ["Siwan","Bettiah","Darbhanga","Muzaffarpur","Begusarai","Purnea","Saharsa","Patna-1","Patna-2","Patna-3"];
 const ASM_MAP = {
   "Siwan":"ASM Darbhanga","Bettiah":"ASM Darbhanga","Darbhanga":"ASM Darbhanga","Muzaffarpur":"ASM Darbhanga",
@@ -166,16 +202,25 @@ function App() {
 
   const proposalList = useMemo(() => toArr(Object.values(proposals)), [proposals]);
 
-  const addProposal = (doctorKey, entries, month, year) => {
-    const existing = Object.values(proposals).find(p =>
-      p.doctorKey===doctorKey && p.month===month && (p.year||"FY 2026-27")===(year||"FY 2026-27")
-    );
-    if (existing) {
-      saveProposal(existing.id, {...existing, entries, updatedAt:now()});
+  const addProposal = (doctorKey, entries, month, year, type="primary") => {
+    // For primary: one per doctor per year (overwrite if exists)
+    // For additional: always create new
+    if (type==="primary") {
+      const existing = Object.values(proposals).find(p =>
+        p.doctorKey===doctorKey && p.type!=="additional" &&
+        (p.year||"FY 2026-27")===(year||"FY 2026-27")
+      );
+      if (existing) {
+        saveProposal(existing.id, {...existing, entries, month, updatedAt:now()});
+      } else {
+        const id = uid();
+        saveProposal(id, { id, doctorKey, month, year:year||"FY 2026-27", entries,
+          type:"primary", status:STATUSES.PROPOSED, proposedBy:user.email, proposedAt:now(), updatedAt:now() });
+      }
     } else {
       const id = uid();
       saveProposal(id, { id, doctorKey, month, year:year||"FY 2026-27", entries,
-        status:STATUSES.PROPOSED, proposedBy:user.email, proposedAt:now(), updatedAt:now() });
+        type:"additional", status:STATUSES.PROPOSED, proposedBy:user.email, proposedAt:now(), updatedAt:now() });
     }
     notify("Proposal saved!");
   };
@@ -194,6 +239,13 @@ function App() {
     const p = proposals[pid]; if (!p) return;
     saveProposal(pid, {...p, status:STATUSES.PROPOSED, approvedBy:null, approvedAt:null, updatedAt:now()});
     notify("Reverted","amber");
+  };
+
+  const withdrawProposal = (pid) => {
+    setSyncSt("saving");
+    DB.ref(DB_PATH+"/proposals/"+pid).remove()
+      .then(()=>{ setSyncSt("synced"); notify("Proposal withdrawn","red"); })
+      .catch(()=>setSyncSt("error"));
   };
 
   const stats = useMemo(() => {
@@ -315,9 +367,9 @@ function App() {
 
       <div className="max-w-7xl mx-auto px-3 py-5">
         {view==="dashboard"    && <DashboardView stats={stats} biharStats={biharStats} proposalList={proposalList} />}
-        {view==="propose"      && isZSM   && <ProposeView user={user} proposals={proposals} onSave={addProposal} notify={notify} setConfirm={setConfirm} />}
-        {view==="myproposals"  && isZSM   && <MyProposalsView myProposals={proposalList.filter(p=>p.proposedBy===user.email)} />}
-        {view==="approve"      && isAdmin  && <ApproveView proposals={proposals} proposalList={proposalList} onApprove={approveProposal} onReject={rejectProposal} onConfirm={confirmProposal} setConfirm={setConfirm} />}
+        {view==="propose"      && isZSM   && <ProposeView user={user} proposals={proposals} onSave={addProposal} onWithdraw={withdrawProposal} notify={notify} setConfirm={setConfirm} />}
+        {view==="myproposals"  && isZSM   && <MyProposalsView myProposals={proposalList.filter(p=>p.proposedBy===user.email)} onWithdraw={withdrawProposal} setConfirm={setConfirm} />}
+        {view==="approve"      && isAdmin  && <ApproveView proposals={proposals} proposalList={proposalList} onApprove={approveProposal} onReject={rejectProposal} onConfirm={confirmProposal} onWithdraw={withdrawProposal} setConfirm={setConfirm} />}
         {view==="tracker"      && isAdmin  && <TrackerView stats={stats} biharStats={biharStats} proposalList={proposalList} />}
         {view==="salestrack"   && <SalesTrackView salesData={salesData} onSave={saveSalesData} isAdmin={isAdmin} notify={notify} setConfirm={setConfirm} />}
       </div>
@@ -329,51 +381,174 @@ function App() {
    DASHBOARD
 ══════════════════════════════════════════════════════ */
 function DashboardView({stats, biharStats, proposalList}) {
-  const [shareMonth, setShareMonth] = useState(curMonth());
-  const [shareYear,  setShareYear]  = useState("FY 2026-27");
+  const [shareYear, setShareYear] = useState("FY 2026-27");
+  const [sharing,   setSharing]   = useState(null); // hq name or "all"
 
   const pendingByHQ = useMemo(() => {
     const result = {};
     HQ_LIST.forEach(hq => {
       const docs = DOCTOR_MASTER.filter(d => d.hq===hq && d.crm26>0);
       const proposed = new Set(
-        proposalList.filter(p => p.month===shareMonth && p.year===shareYear)
+        proposalList
+          .filter(p => (p.year||"FY 2026-27")===shareYear && p.type!=="additional")
           .map(p => p.doctorKey)
       );
       result[hq] = docs.filter(d => !proposed.has(d.name+"___"+d.hq));
     });
     return result;
-  }, [proposalList, shareMonth, shareYear]);
+  }, [proposalList, shareYear]);
 
-  const shareCard = (hq) => {
-    const pending = pendingByHQ[hq];
-    if (!pending.length) { alert(`No pending doctors for ${hq} in ${shareMonth} ${shareYear}`); return; }
+  const makeCardHTML = (hq, pending) => {
     const total = pending.reduce((s,d)=>s+d.crm26,0);
-    let text = `📊 *CRM Pending — ${hq}*\n${shareMonth} ${shareYear}\n`;
-    text += `${'─'.repeat(30)}\n`;
-    pending.forEach((d,i) => { text += `${i+1}. ${d.name} — ${inr(d.crm26)}\n`; });
-    text += `${'─'.repeat(30)}\n`;
-    text += `*Pending Total: ${inr(total)}* (${pending.length} doctors)\n`;
-    text += `\nGenerated by CRM 26 · Aldan Healthcare`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url,'_blank');
+    const dt = new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+    const allDocs = DOCTOR_MASTER.filter(d=>d.hq===hq&&d.crm26>0);
+    const proposed = allDocs.length - pending.length;
+    const pct = allDocs.length>0 ? Math.round(proposed/allDocs.length*100) : 0;
+
+    const rows = pending.map((d,i) =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:12px;color:rgba(255,255,255,0.8);font-weight:600;">${i+1}. ${d.name}</div>
+        <div style="font-size:12px;font-weight:800;color:#fbbf24;">₹${d.crm26.toLocaleString("en-IN")}</div>
+      </div>`
+    ).join("");
+
+    return `<div id="share-card" style="width:800px;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:40px;font-family:Arial,sans-serif;color:white;box-sizing:border-box;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.1)">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:3px;margin-bottom:6px">💊 CRM 26 · Aldan Healthcare</div>
+          <div style="font-size:24px;font-weight:900;margin-bottom:3px">${hq} — Pending Doctors</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">${shareYear} · ${dt}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:50px;padding:12px 20px;text-align:center;flex-shrink:0;">
+          <div style="font-size:28px;font-weight:900;color:#fbbf24;">${pending.length}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;">pending</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">Total Doctors</div>
+          <div style="font-size:22px;font-weight:900;color:#60a5fa;">${allDocs.length}</div>
+        </div>
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">Proposed</div>
+          <div style="font-size:22px;font-weight:900;color:#34d399;">${proposed}</div>
+        </div>
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">Pending CRM</div>
+          <div style="font-size:22px;font-weight:900;color:#fbbf24;">₹${(total/100000).toFixed(2)}L</div>
+        </div>
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">HQ Plan CRM</div>
+          <div style="font-size:22px;font-weight:900;color:#c084fc;">₹${(HQ_PLAN[hq]/100000).toFixed(2)}L</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border-radius:999px;height:8px;overflow:hidden;margin-bottom:20px">
+        <div style="background:linear-gradient(90deg,#6366f1,#34d399);height:100%;width:${pct}%;border-radius:999px;"></div>
+      </div>
+      <div style="margin-bottom:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.3);">Pending Doctor List</div>
+      ${rows}
+      <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07)">CRM 26 · crm.aldancare.com · ${dt}</div>
+    </div>`;
   };
 
-  const shareAllHQs = () => {
-    let text = `📊 *CRM Pending — All HQs*\n${shareMonth} ${shareYear}\n${'═'.repeat(30)}\n`;
-    let grandTotal = 0; let grandCount = 0;
-    HQ_LIST.forEach(hq => {
-      const pending = pendingByHQ[hq];
-      if (!pending.length) return;
-      const total = pending.reduce((s,d)=>s+d.crm26,0);
-      grandTotal += total; grandCount += pending.length;
-      text += `\n*${hq}* (${pending.length} pending)\n`;
-      pending.forEach(d => { text += `  • ${d.name} — ${inr(d.crm26)}\n`; });
-      text += `  Subtotal: ${inr(total)}\n`;
-    });
-    text += `\n${'═'.repeat(30)}\n*Bihar Pending Total: ${inr(grandTotal)}* (${grandCount} doctors)`;
-    text += `\n\nGenerated by CRM 26 · Aldan Healthcare`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+  const makeAllHQsCardHTML = () => {
+    const dt = new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+    let grandTotal=0; let grandCount=0;
+    const hqRows = HQ_LIST.map(hq => {
+      const pending = pendingByHQ[hq]||[];
+      if (!pending.length) return '';
+      const t = pending.reduce((s,d)=>s+d.crm26,0);
+      grandTotal+=t; grandCount+=pending.length;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:white;">${hq}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;">${pending.length} doctors pending</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:900;color:#fbbf24;">₹${(t/100000).toFixed(2)}L</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);">of ₹${(HQ_PLAN[hq]/100000).toFixed(2)}L plan</div>
+        </div>
+      </div>`;
+    }).join("");
+    const totalDocs = DOCTOR_MASTER.filter(d=>d.crm26>0).length;
+    const proposedCount = totalDocs - grandCount;
+    const pct = totalDocs>0 ? Math.round(proposedCount/totalDocs*100) : 0;
+    return `<div id="share-card" style="width:800px;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e40af 100%);padding:40px;font-family:Arial,sans-serif;color:white;box-sizing:border-box;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.1)">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:3px;margin-bottom:6px">💊 CRM 26 · Aldan Healthcare</div>
+          <div style="font-size:24px;font-weight:900;margin-bottom:3px">Bihar — Pending Doctors</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">${shareYear} · ${dt}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:50px;padding:12px 20px;text-align:center;flex-shrink:0;">
+          <div style="font-size:28px;font-weight:900;color:#fbbf24;">${grandCount}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;">pending</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">Total Doctors</div>
+          <div style="font-size:22px;font-weight:900;color:#60a5fa;">${totalDocs}</div>
+        </div>
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">Proposed</div>
+          <div style="font-size:22px;font-weight:900;color:#34d399;">${proposedCount}</div>
+        </div>
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">Pending CRM</div>
+          <div style="font-size:22px;font-weight:900;color:#fbbf24;">₹${(grandTotal/100000).toFixed(2)}L</div>
+        </div>
+        <div style="flex:1;min-width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:5px">Bihar Plan</div>
+          <div style="font-size:22px;font-weight:900;color:#c084fc;">₹49.50L</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.06);border-radius:999px;height:8px;overflow:hidden;margin-bottom:20px">
+        <div style="background:linear-gradient(90deg,#6366f1,#34d399);height:100%;width:${pct}%;border-radius:999px;"></div>
+      </div>
+      <div style="margin-bottom:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.3);">HQ-wise Pending</div>
+      ${hqRows}
+      <div style="font-size:10px;color:rgba(255,255,255,0.2);text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07)">CRM 26 · crm.aldancare.com · ${dt}</div>
+    </div>`;
+  };
+
+  const generateAndDownload = async (cardHTML, filename) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-999;';
+    wrap.innerHTML = cardHTML;
+    document.body.appendChild(wrap);
+    try {
+      await new Promise(r=>setTimeout(r,300));
+      const card = wrap.querySelector('#share-card');
+      const canvas = await html2canvas(card, {scale:2, useCORS:true, logging:false, backgroundColor:null});
+      const dataUrl = canvas.toDataURL('image/png');
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        const win = window.open('','_blank');
+        win.document.write(`<html><head><meta name="viewport" content="width=device-width"><title>${filename}</title><style>body{margin:0;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px;box-sizing:border-box}img{max-width:100%;border-radius:12px}p{color:rgba(255,255,255,0.4);font-family:sans-serif;text-align:center;font-size:13px;margin-top:12px}</style></head><body><img src="${dataUrl}"><p>Long press → Save to Photos or Share</p></body></html>`);
+      } else {
+        const a = document.createElement('a');
+        a.href=dataUrl; a.download=filename+'.png'; a.click();
+      }
+    } catch(err) {
+      console.error(err);
+    } finally {
+      document.body.removeChild(wrap);
+    }
+  };
+
+  const shareHQ = async (hq) => {
+    const pending = pendingByHQ[hq];
+    if (!pending.length) { alert(`No pending doctors for ${hq} in ${shareYear}`); return; }
+    setSharing(hq);
+    await generateAndDownload(makeCardHTML(hq, pending), `CRM_Pending_${hq}_${shareYear.replace(/\s/g,'_')}`);
+    setSharing(null);
+  };
+
+  const shareAll = async () => {
+    setSharing('all');
+    await generateAndDownload(makeAllHQsCardHTML(), `CRM_Pending_Bihar_${shareYear.replace(/\s/g,'_')}`);
+    setSharing(null);
   };
 
   const proposed  = proposalList.filter(p=>p.status===STATUSES.PROPOSED).length;
@@ -416,21 +591,19 @@ function DashboardView({stats, biharStats, proposalList}) {
         ))}
       </div>
 
-      {/* HQ table with pending share */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-50 flex flex-wrap gap-2 items-center justify-between">
           <h3 className="font-black text-slate-700 text-sm">HQ-wise CRM26 Status</h3>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-slate-400 font-semibold">Pending for:</span>
-            <select value={shareMonth} onChange={e=>setShareMonth(e.target.value)}
-              className="px-2 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none">
-              {MONTHS.map(m=><option key={m}>{m}</option>)}
-            </select>
             <select value={shareYear} onChange={e=>setShareYear(e.target.value)}
               className="px-2 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none">
               {YEARS.map(y=><option key={y}>{y}</option>)}
             </select>
-            <button onClick={shareAllHQs} className="px-2 py-1 bg-emerald-600 text-white text-xs font-bold rounded-lg">📤 Share All</button>
+            <button onClick={shareAll} disabled={!!sharing}
+              className={`px-2 py-1 text-white text-xs font-bold rounded-lg ${sharing==='all'?"bg-emerald-400 animate-pulse":"bg-emerald-600 hover:bg-emerald-700"}`}>
+              {sharing==='all'?"⟳ Generating…":"🖼️ Share All"}
+            </button>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -460,13 +633,16 @@ function DashboardView({stats, biharStats, proposalList}) {
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
-                      {pendingDocs.length > 0
-                        ? <span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-600">{pendingDocs.length} docs</span>
-                        : <span className="text-xs text-emerald-500 font-bold">✓ Done</span>}
+                      {pendingDocs.length>0
+                        ?<span className="px-1.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-600">{pendingDocs.length} docs</span>
+                        :<span className="text-xs text-emerald-500 font-bold">✓ Done</span>}
                     </td>
                     <td className="px-3 py-2.5">
-                      {pendingDocs.length > 0 && (
-                        <button onClick={()=>shareCard(hq)} className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg hover:bg-emerald-100">📤 WA</button>
+                      {pendingDocs.length>0&&(
+                        <button onClick={()=>shareHQ(hq)} disabled={!!sharing}
+                          className={`px-2 py-1 text-xs font-bold rounded-lg border ${sharing===hq?"bg-emerald-50 text-emerald-300 animate-pulse border-emerald-100":"bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"}`}>
+                          {sharing===hq?"⟳":"🖼️"} Card
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -495,50 +671,73 @@ function DashboardView({stats, biharStats, proposalList}) {
 /* ══════════════════════════════════════════════════════
    PROPOSE VIEW
 ══════════════════════════════════════════════════════ */
-function ProposeView({user, proposals, onSave, notify, setConfirm}) {
-  const [month,      setMonth]      = useState("");
-  const [year,       setYear]       = useState("");
-  const [hqFilter,   setHqFilter]   = useState("");
-  const [search,     setSearch]     = useState("");
-  const [showPending,setShowPending]= useState(false);
-  const [selected,   setSelected]   = useState({}); // doctorKey → true
-  const [bulkModal,  setBulkModal]  = useState(false);
-  const [bulkAmts,   setBulkAmts]   = useState({}); // doctorKey → amount
-  const [editModal,  setEditModal]  = useState(null); // single doctor edit
-  const [editAmt,    setEditAmt]    = useState(0);
+function ProposeView({user, proposals, onSave, onWithdraw, notify, setConfirm}) {
+  const [month,       setMonth]       = useState("");
+  const [year,        setYear]        = useState("");
+  const [hqFilter,    setHqFilter]    = useState("");
+  const [search,      setSearch]      = useState("");
+  const [showPending, setShowPending] = useState(false);
+  const [selected,    setSelected]    = useState({});
+  const [bulkModal,   setBulkModal]   = useState(false);
+  const [bulkAmts,    setBulkAmts]    = useState({});
+  const [editModal,   setEditModal]   = useState(null);
+  const [editAmt,     setEditAmt]     = useState(0);
+  const [addlModal,   setAddlModal]   = useState(null); // additional proposal modal
+  const [addlMonth,   setAddlMonth]   = useState("");
+  const [addlAmt,     setAddlAmt]     = useState(0);
 
   const periodReady = month && year;
 
-  const getExisting = useCallback((doctorKey) => {
-    if (!periodReady) return null;
-    return Object.values(proposals).find(p => p.doctorKey===doctorKey && p.month===month && (p.year||"FY 2026-27")===(year||"FY 2026-27"));
-  }, [proposals, month, year]);
+  // Get primary proposal for a doctor in the selected year
+  const getPrimary = useCallback((doctorKey) => {
+    if (!year) return null;
+    return Object.values(proposals).find(p =>
+      p.doctorKey===doctorKey &&
+      p.type!=="additional" &&
+      (p.year||"FY 2026-27")===year
+    );
+  }, [proposals, year]);
 
-  // Pending count per HQ for badge
+  // Get all proposals for a doctor in the selected year
+  const getAllProposals = useCallback((doctorKey) => {
+    if (!year) return [];
+    return Object.values(proposals).filter(p =>
+      p.doctorKey===doctorKey && (p.year||"FY 2026-27")===year
+    );
+  }, [proposals, year]);
+
+  // Pending count per HQ — doctor with crm26>0 and no primary proposal for year
   const pendingCount = useMemo(() => {
-    if (!periodReady) return {};
-    const proposed = new Set(Object.values(proposals).filter(p=>p.month===month&&p.year===year).map(p=>p.doctorKey));
+    if (!year) return {};
+    const primaryKeys = new Set(
+      Object.values(proposals)
+        .filter(p => p.type!=="additional" && (p.year||"FY 2026-27")===year)
+        .map(p => p.doctorKey)
+    );
     const counts = {};
     HQ_LIST.forEach(hq => {
-      counts[hq] = DOCTOR_MASTER.filter(d=>d.hq===hq && d.crm26>0 && !proposed.has(d.name+"___"+d.hq)).length;
+      counts[hq] = DOCTOR_MASTER.filter(d=>d.hq===hq && d.crm26>0 && !primaryKeys.has(d.name+"___"+d.hq)).length;
     });
     return counts;
-  }, [proposals, month, year, periodReady]);
+  }, [proposals, year]);
 
   const doctors = useMemo(() => {
     let list = DOCTOR_MASTER;
     if (hqFilter) list = list.filter(d=>d.hq===hqFilter);
     if (search)   list = list.filter(d=>d.name.toLowerCase().includes(search.toLowerCase()));
-    if (showPending && periodReady) {
-      const proposed = new Set(Object.values(proposals).filter(p=>p.month===month&&p.year===year).map(p=>p.doctorKey));
-      list = list.filter(d => d.crm26>0 && !proposed.has(d.name+"___"+d.hq));
+    if (showPending && year) {
+      const primaryKeys = new Set(
+        Object.values(proposals)
+          .filter(p=>p.type!=="additional"&&(p.year||"FY 2026-27")===year)
+          .map(p=>p.doctorKey)
+      );
+      list = list.filter(d => d.crm26>0 && !primaryKeys.has(d.name+"___"+d.hq));
     }
     return list;
-  }, [hqFilter, search, showPending, proposals, month, year, periodReady]);
+  }, [hqFilter, search, showPending, proposals, year]);
 
   const selectedKeys = Object.keys(selected).filter(k=>selected[k]);
-
-  const toggleSelect = (key) => setSelected(prev => ({...prev, [key]: !prev[key]}));
+  const toggleSelect = (key) => setSelected(prev=>({...prev,[key]:!prev[key]}));
   const selectAll    = () => { const s={}; doctors.forEach(d=>{s[d.name+"___"+d.hq]=true;}); setSelected(s); };
   const deselectAll  = () => setSelected({});
 
@@ -546,8 +745,8 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
     const amts = {};
     selectedKeys.forEach(k => {
       const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===k);
-      const ex  = getExisting(k);
-      amts[k] = ex?.entries?.[0]?.proposed || doc?.crm26 || 0;
+      const primary = getPrimary(k);
+      amts[k] = primary?.entries?.[0]?.proposed || doc?.crm26 || 0;
     });
     setBulkAmts(amts);
     setBulkModal(true);
@@ -556,49 +755,68 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
   const submitBulk = () => {
     selectedKeys.forEach(k => {
       const amt = Number(bulkAmts[k]||0);
-      onSave(k, [{proposed:amt, issued:amt}], month, year);
+      onSave(k, [{proposed:amt,issued:amt}], month, year, "primary");
     });
-    setSelected({});
-    setBulkModal(false);
+    setSelected({}); setBulkModal(false);
     notify(`${selectedKeys.length} proposals saved!`);
   };
 
   const openEdit = (doc) => {
     const key = doc.name+"___"+doc.hq;
-    const ex  = getExisting(key);
+    const primary = getPrimary(key);
     setEditModal(doc);
-    setEditAmt(ex?.entries?.[0]?.proposed || doc.crm26 || 0);
+    setEditAmt(primary?.entries?.[0]?.proposed || doc.crm26 || 0);
   };
 
   const submitEdit = () => {
     const key = editModal.name+"___"+editModal.hq;
-    onSave(key, [{proposed:Number(editAmt), issued:Number(editAmt)}], month, year);
+    onSave(key, [{proposed:Number(editAmt),issued:Number(editAmt)}], month, year, "primary");
     setEditModal(null);
+  };
+
+  const openAddl = (doc) => {
+    setAddlModal(doc);
+    setAddlMonth(month||curMonth());
+    setAddlAmt(doc.crm26||0);
+  };
+
+  const submitAddl = () => {
+    const key = addlModal.name+"___"+addlModal.hq;
+    onSave(key, [{proposed:Number(addlAmt),issued:Number(addlAmt)}], addlMonth, year, "additional");
+    setAddlModal(null);
+    notify("Additional proposal added!");
+  };
+
+  const handleWithdraw = (pid, docName) => {
+    setConfirm({
+      msg:`Withdraw proposal for "${docName}"? This cannot be undone.`,
+      okLabel:"Withdraw",
+      onOk:()=>onWithdraw(pid)
+    });
   };
 
   return (
     <div>
       <h1 className="text-xl font-black text-slate-800 mb-1">Propose CRM</h1>
-      <p className="text-sm text-slate-400 mb-4">Select period first, then propose for doctors</p>
+      <p className="text-sm text-slate-400 mb-4">Select period, then propose for doctors</p>
 
-      {/* Single doctor edit modal */}
+      {/* Single edit modal */}
       {editModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:"rgba(15,23,42,0.65)"}}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div className="px-6 pt-5 pb-4 border-b border-slate-100">
-              <h2 className="font-black text-slate-800">Propose CRM</h2>
+              <h2 className="font-black text-slate-800">Primary Proposal</h2>
               <p className="text-xs text-slate-400 mt-0.5">{editModal.name} · {editModal.hq} · {month} {year}</p>
             </div>
             <div className="px-6 py-4 space-y-3">
               <div className="bg-slate-50 rounded-xl p-3 text-xs text-slate-500 space-y-1">
                 <div className="flex justify-between"><span>CRM25 Actual</span><strong>{inr(editModal.crm25_act)}</strong></div>
-                <div className="flex justify-between"><span>Avg PTR FY25/mo</span><strong>{inr(editModal.avg_ptr25)}</strong></div>
                 <div className="flex justify-between"><span>Plan CRM26 (Annual)</span><strong className="text-blue-600">{inr(editModal.crm26)}</strong></div>
                 <div className="flex justify-between"><span>Plan Sales26/mo</span><strong>{inr(editModal.sales26)}</strong></div>
               </div>
-              {getExisting(editModal.name+"___"+editModal.hq) && (
+              {getPrimary(editModal.name+"___"+editModal.hq) && (
                 <div className="text-xs px-3 py-2 rounded-lg font-semibold bg-amber-100 text-amber-700">
-                  Existing: {getExisting(editModal.name+"___"+editModal.hq)?.status} · {inr(getExisting(editModal.name+"___"+editModal.hq)?.entries?.[0]?.proposed)}
+                  Existing Primary: {getPrimary(editModal.name+"___"+editModal.hq)?.status} · {getPrimary(editModal.name+"___"+editModal.hq)?.month} · {inr(getPrimary(editModal.name+"___"+editModal.hq)?.entries?.[0]?.proposed)}
                 </div>
               )}
               <div>
@@ -610,24 +828,57 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
             <div className="flex gap-3 px-6 pb-5">
               <button onClick={()=>setEditModal(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold">Cancel</button>
               <button onClick={submitEdit} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700">
-                {getExisting(editModal.name+"___"+editModal.hq) ? "Update" : "Submit"}
+                {getPrimary(editModal.name+"___"+editModal.hq) ? "Update Primary" : "Submit Primary"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bulk proposal modal */}
+      {/* Additional proposal modal */}
+      {addlModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:"rgba(15,23,42,0.65)"}}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+              <h2 className="font-black text-slate-800">Additional Proposal</h2>
+              <p className="text-xs text-slate-400 mt-0.5">{addlModal.name} · {addlModal.hq} · {year}</p>
+            </div>
+            <div className="px-6 py-4 space-y-3">
+              <div className="bg-blue-50 rounded-xl p-3 text-xs text-blue-700 font-semibold">
+                This will be added alongside the primary proposal. Total = Primary + Additional.
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Month</label>
+                <select value={addlMonth} onChange={e=>setAddlMonth(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white">
+                  {MONTHS.map(m=><option key={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Additional CRM Amount (₹)</label>
+                <input type="number" value={addlAmt} onChange={e=>setAddlAmt(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"/>
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 pb-5">
+              <button onClick={()=>setAddlModal(null)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold">Cancel</button>
+              <button onClick={submitAddl} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700">Add Proposal</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk modal */}
       {bulkModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{background:"rgba(15,23,42,0.65)"}}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
             <div className="px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
               <h2 className="font-black text-slate-800">Bulk Propose — {selectedKeys.length} Doctors</h2>
-              <p className="text-xs text-slate-400 mt-0.5">{month} {year} · Adjust amounts below</p>
+              <p className="text-xs text-slate-400 mt-0.5">{month} {year} · Primary proposals</p>
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-4 space-y-2">
-              {selectedKeys.map(k => {
-                const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===k);
+              {selectedKeys.map(k=>{
+                const doc=DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===k);
                 return (
                   <div key={k} className="flex items-center gap-3 py-2 border-b border-slate-50">
                     <div className="flex-1 min-w-0">
@@ -643,7 +894,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
             </div>
             <div className="px-6 py-4 border-t border-slate-100 shrink-0">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-xs text-slate-500 font-semibold">Total Proposed</span>
+                <span className="text-xs text-slate-500 font-semibold">Total</span>
                 <span className="font-black text-blue-700">{inr(Object.values(bulkAmts).reduce((s,v)=>s+Number(v||0),0))}</span>
               </div>
               <div className="flex gap-3">
@@ -655,11 +906,11 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
         </div>
       )}
 
-      {/* PERIOD SELECTOR — mandatory */}
+      {/* Period selector */}
       <div className={`rounded-2xl p-4 mb-4 border-2 ${periodReady?"bg-blue-50 border-blue-200":"bg-amber-50 border-amber-300"}`}>
         <div className="flex flex-wrap gap-3 items-center">
           <span className={`text-xs font-black uppercase tracking-widest ${periodReady?"text-blue-700":"text-amber-700"}`}>
-            {periodReady ? "📅 Proposing for:" : "⚠️ Select period to continue:"}
+            {periodReady?"📅 Proposing for:":"⚠️ Select period to continue:"}
           </span>
           <select value={month} onChange={e=>setMonth(e.target.value)}
             className={`px-3 py-2 border-2 rounded-xl text-sm font-bold focus:outline-none bg-white ${periodReady?"border-blue-300 text-blue-800":"border-amber-400 text-amber-800"}`}>
@@ -671,19 +922,17 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
             <option value="">— Year —</option>
             {YEARS.map(y=><option key={y}>{y}</option>)}
           </select>
-          {periodReady && <span className="text-xs text-blue-500 font-semibold">All proposals tagged to this period</span>}
+          {periodReady && <span className="text-xs text-blue-500 font-semibold">Primary proposals tagged to {year}</span>}
         </div>
       </div>
 
-      {/* Show filters + table only when period is selected */}
       {!periodReady ? (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
           <div className="text-4xl mb-3">📅</div>
-          <p className="font-bold text-slate-400">Please select Month and Year above to view doctors</p>
+          <p className="font-bold text-slate-400">Select Month and Year above to view doctors</p>
         </div>
       ) : (
         <>
-          {/* Filters */}
           <div className="flex flex-wrap gap-2 mb-3">
             <select value={hqFilter} onChange={e=>setHqFilter(e.target.value)}
               className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
@@ -695,66 +944,83 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
             <input placeholder="Search doctor…" value={search} onChange={e=>setSearch(e.target.value)}
               className="flex-1 min-w-32 px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"/>
             <button onClick={()=>setShowPending(!showPending)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${showPending?"bg-red-600 text-white border-red-600":"bg-white text-slate-500 border-slate-200"}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${showPending?"bg-red-600 text-white border-red-600":"bg-white text-slate-500 border-slate-200"}`}>
               ⏳ {showPending?"Show All":"Pending Only"}
             </button>
-            <button onClick={selectAll} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50">Select All</button>
+            <button onClick={selectAll} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500">Select All</button>
             {selectedKeys.length>0 && <button onClick={deselectAll} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-400">Clear</button>}
           </div>
 
-          {/* Bulk action bar */}
-          {selectedKeys.length > 0 && (
+          {selectedKeys.length>0 && (
             <div className="bg-blue-600 text-white rounded-xl px-4 py-2.5 mb-3 flex items-center justify-between">
-              <span className="text-sm font-bold">{selectedKeys.length} doctor{selectedKeys.length>1?"s":""} selected</span>
-              <button onClick={openBulk} className="bg-white text-blue-600 px-3 py-1 rounded-lg text-xs font-black hover:bg-blue-50">
-                Propose Selected ({selectedKeys.length}) →
-              </button>
+              <span className="text-sm font-bold">{selectedKeys.length} selected</span>
+              <button onClick={openBulk} className="bg-white text-blue-600 px-3 py-1 rounded-lg text-xs font-black">Propose Selected ({selectedKeys.length}) →</button>
             </div>
           )}
 
-          {/* Doctor table */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
-                    <th className="px-3 py-2.5 text-left"><input type="checkbox" onChange={e=>e.target.checked?selectAll():deselectAll()} className="rounded"/></th>
-                    {["HQ","Doctor","CRM25 Act","Plan CRM26",`${month} Status`,`${month} Amt`,"Action"].map(h=>(
+                    <th className="px-3 py-2.5"><input type="checkbox" onChange={e=>e.target.checked?selectAll():deselectAll()} className="rounded"/></th>
+                    {["HQ","Doctor","CRM25","Plan CRM26","Primary Proposal","Total Proposed","Actions"].map(h=>(
                       <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {doctors.map(doc => {
+                  {doctors.map(doc=>{
                     const key = doc.name+"___"+doc.hq;
-                    const ex  = getExisting(key);
-                    const sc  = ex ? STATUS_COLORS[ex.status] : null;
+                    const primary = getPrimary(key);
+                    const allP    = getAllProposals(key);
+                    const totalProposed = allP.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0);
                     const isSelected = !!selected[key];
+                    const canWithdraw = primary && primary.status===STATUSES.PROPOSED;
+                    const sc = primary ? STATUS_COLORS[primary.status] : null;
                     return (
                       <tr key={key} className={`hover:bg-slate-50 ${isSelected?"bg-blue-50":""}`}>
                         <td className="px-3 py-2.5">
                           <input type="checkbox" checked={isSelected} onChange={()=>toggleSelect(key)} className="rounded"/>
                         </td>
                         <td className="px-3 py-2.5 text-xs text-slate-400">{doc.hq}</td>
-                        <td className="px-3 py-2.5 font-semibold text-slate-800">{doc.name}</td>
-                        <td className="px-3 py-2.5 text-slate-600 text-xs">{doc.crm25_act>0?inr(doc.crm25_act):<span className="text-slate-300">—</span>}</td>
-                        <td className="px-3 py-2.5 font-bold text-blue-700 text-xs">{doc.crm26>0?inr(doc.crm26):<span className="text-slate-300">—</span>}</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800 text-xs">{doc.name}</td>
+                        <td className="px-3 py-2.5 text-xs text-slate-500">{doc.crm25_act>0?inr(doc.crm25_act):"—"}</td>
+                        <td className="px-3 py-2.5 font-bold text-blue-700 text-xs">{doc.crm26>0?inr(doc.crm26):"—"}</td>
                         <td className="px-3 py-2.5">
-                          {ex?<span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{ex.status}</span>
-                             :<span className="text-slate-300 text-xs">—</span>}
+                          {primary
+                            ?<div>
+                              <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{primary.status}</span>
+                              <span className="text-xs text-slate-500 ml-1">{primary.month} · {inr(primary.entries?.[0]?.proposed)}</span>
+                              {allP.length>1&&<span className="text-xs text-indigo-500 ml-1">+{allP.length-1} addl</span>}
+                            </div>
+                            :<span className="text-slate-300 text-xs">— Pending</span>}
                         </td>
                         <td className="px-3 py-2.5 font-bold text-slate-700 text-xs">
-                          {ex?inr(ex.entries?.[0]?.proposed):<span className="text-slate-300">—</span>}
+                          {totalProposed>0?inr(totalProposed):<span className="text-slate-300">—</span>}
                         </td>
                         <td className="px-3 py-2.5">
-                          {(!ex||ex.status===STATUSES.PROPOSED)?(
-                            <button onClick={()=>openEdit(doc)}
-                              className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700">
-                              {ex?"Edit":"Propose"}
-                            </button>
-                          ):(
-                            <span className="text-xs text-slate-300 font-semibold">{ex.status}</span>
-                          )}
+                          <div className="flex gap-1 flex-wrap">
+                            {!primary&&(
+                              <button onClick={()=>openEdit(doc)}
+                                className="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg">Propose</button>
+                            )}
+                            {primary&&primary.status===STATUSES.PROPOSED&&(
+                              <button onClick={()=>openEdit(doc)}
+                                className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg">Edit</button>
+                            )}
+                            {primary&&(
+                              <button onClick={()=>openAddl(doc)}
+                                className="px-2.5 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg">+ Add</button>
+                            )}
+                            {canWithdraw&&(
+                              <button onClick={()=>handleWithdraw(primary.id, doc.name)}
+                                className="px-2.5 py-1 bg-red-50 text-red-500 text-xs font-bold rounded-lg border border-red-200">✕</button>
+                            )}
+                            {primary&&!canWithdraw&&(
+                              <span className="text-xs text-slate-300 font-semibold">Locked</span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -762,7 +1028,7 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
                 </tbody>
               </table>
             </div>
-            {doctors.length===0 && <div className="text-center py-10 text-slate-300 text-sm">No doctors found</div>}
+            {doctors.length===0&&<div className="text-center py-10 text-slate-300 text-sm">No doctors found</div>}
           </div>
         </>
       )}
@@ -773,28 +1039,38 @@ function ProposeView({user, proposals, onSave, notify, setConfirm}) {
 /* ══════════════════════════════════════════════════════
    MY PROPOSALS VIEW
 ══════════════════════════════════════════════════════ */
-function MyProposalsView({myProposals}) {
+function MyProposalsView({myProposals, onWithdraw, setConfirm}) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterMonth,  setFilterMonth]  = useState("");
   const [filterHQ,     setFilterHQ]     = useState("");
+  const [filterType,   setFilterType]   = useState("all"); // all | primary | additional
+  const [search,       setSearch]       = useState("");
 
   const filtered = useMemo(() => myProposals.filter(p => {
     if (filterStatus!=="all" && p.status!==filterStatus) return false;
     if (filterMonth && p.month!==filterMonth) return false;
+    if (filterType!=="all") {
+      if (filterType==="primary"    && p.type==="additional") return false;
+      if (filterType==="additional" && p.type!=="additional") return false;
+    }
     if (filterHQ) {
       const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===p.doctorKey);
       if (doc?.hq!==filterHQ) return false;
     }
+    if (search) {
+      const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===p.doctorKey);
+      if (!doc?.name.toLowerCase().includes(search.toLowerCase())) return false;
+    }
     return true;
-  }), [myProposals, filterStatus, filterMonth, filterHQ]);
+  }), [myProposals, filterStatus, filterMonth, filterHQ, filterType, search]);
 
   const counts = {all:myProposals.length,Proposed:0,Approved:0,Confirmed:0};
   myProposals.forEach(p=>counts[p.status]++);
 
   const groupedRows = useMemo(() => {
     const g = {};
-    filtered.forEach(p => {
-      const k = `${p.month} ${p.year||"FY 2026-27"}`;
+    filtered.forEach(p=>{
+      const k=`${p.month} ${p.year||"FY 2026-27"}`;
       if(!g[k]) g[k]=[];
       g[k].push(p);
     });
@@ -802,15 +1078,24 @@ function MyProposalsView({myProposals}) {
   }, [filtered]);
 
   const monthSubtotals = useMemo(() => {
-    const mt = {};
-    filtered.forEach(p => {
-      const k = `${p.month} ${p.year||"FY 2026-27"}`;
-      mt[k] = (mt[k]||0) + Number(p.entries?.[0]?.proposed||0);
+    const mt={};
+    filtered.forEach(p=>{
+      const k=`${p.month} ${p.year||"FY 2026-27"}`;
+      mt[k]=(mt[k]||0)+Number(p.entries?.[0]?.proposed||0);
     });
     return mt;
   }, [filtered]);
 
   const grandTotal = filtered.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0);
+
+  const handleWithdraw = (p) => {
+    const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===p.doctorKey);
+    setConfirm({
+      msg:`Withdraw ${p.type==="additional"?"additional":"primary"} proposal for "${doc?.name}"?`,
+      okLabel:"Withdraw",
+      onOk:()=>onWithdraw(p.id)
+    });
+  };
 
   return (
     <div>
@@ -827,20 +1112,27 @@ function MyProposalsView({myProposals}) {
       </div>
 
       <div className="flex gap-2 mb-4 flex-wrap items-center">
+        <input placeholder="Search doctor…" value={search} onChange={e=>setSearch(e.target.value)}
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-36"/>
         <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)}
           className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
-          <option value="">All Months</option>
-          {MONTHS.map(m=><option key={m}>{m}</option>)}
+          <option value="">All Months</option>{MONTHS.map(m=><option key={m}>{m}</option>)}
         </select>
         <select value={filterHQ} onChange={e=>setFilterHQ(e.target.value)}
           className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
-          <option value="">All HQs</option>
-          {HQ_LIST.map(h=><option key={h}>{h}</option>)}
+          <option value="">All HQs</option>{HQ_LIST.map(h=><option key={h}>{h}</option>)}
         </select>
-        {(filterMonth||filterHQ) && (
-          <button onClick={()=>{setFilterMonth("");setFilterHQ("");}} className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-slate-400 hover:text-red-500 bg-white">✕ Clear</button>
+        <select value={filterType} onChange={e=>setFilterType(e.target.value)}
+          className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-white focus:outline-none">
+          <option value="all">All Types</option>
+          <option value="primary">Primary</option>
+          <option value="additional">Additional</option>
+        </select>
+        {(filterMonth||filterHQ||search||filterType!=="all")&&(
+          <button onClick={()=>{setFilterMonth("");setFilterHQ("");setSearch("");setFilterType("all");}}
+            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-slate-400 hover:text-red-500 bg-white">✕ Clear</button>
         )}
-        {filtered.length>0 && (
+        {filtered.length>0&&(
           <div className="ml-auto flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-1.5">
             <span className="text-xs text-indigo-500 font-semibold">Filtered Total:</span>
             <span className="text-sm font-black text-indigo-700">{inr(grandTotal)}</span>
@@ -852,41 +1144,56 @@ function MyProposalsView({myProposals}) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>{["Doctor","HQ","Month","Year","Proposed Amt","Status","On","Approved By"].map(h=>(
+              <tr>{["Doctor","HQ","Type","Month","Year","Proposed","Status","On","Action"].map(h=>(
                 <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
               ))}</tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {Object.entries(groupedRows).map(([monthKey, props]) => (
+              {Object.entries(groupedRows).map(([monthKey, props])=>(
                 <React.Fragment key={monthKey}>
-                  {props.map(p => {
-                    const doc = DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===p.doctorKey);
-                    const sc  = STATUS_COLORS[p.status];
+                  {props.map(p=>{
+                    const doc=DOCTOR_MASTER.find(d=>d.name+"___"+d.hq===p.doctorKey);
+                    const sc=STATUS_COLORS[p.status];
+                    const isAddl=p.type==="additional";
+                    const canWithdraw=p.status===STATUSES.PROPOSED;
                     return (
                       <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="px-3 py-2.5 font-semibold text-slate-800">{doc?.name||p.doctorKey}</td>
-                        <td className="px-3 py-2.5 text-xs text-slate-500">{doc?.hq}</td>
+                        <td className="px-3 py-2.5 font-semibold text-slate-800 text-xs">{doc?.name||p.doctorKey}</td>
+                        <td className="px-3 py-2.5 text-xs text-slate-400">{doc?.hq}</td>
+                        <td className="px-3 py-2.5">
+                          <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${isAddl?"bg-indigo-100 text-indigo-700":"bg-slate-100 text-slate-600"}`}>
+                            {isAddl?"Additional":"Primary"}
+                          </span>
+                        </td>
                         <td className="px-3 py-2.5 text-xs text-slate-500">{p.month}</td>
                         <td className="px-3 py-2.5 text-xs text-slate-400">{p.year||"FY 2026-27"}</td>
                         <td className="px-3 py-2.5 font-bold text-slate-700">{inr(p.entries?.[0]?.proposed)}</td>
                         <td className="px-3 py-2.5"><span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${sc.bg} ${sc.text}`}>{p.status}</span></td>
                         <td className="px-3 py-2.5 text-xs text-slate-400">{p.proposedAt}</td>
-                        <td className="px-3 py-2.5 text-xs text-slate-400">{p.approvedBy||"—"}</td>
+                        <td className="px-3 py-2.5">
+                          {canWithdraw&&(
+                            <button onClick={()=>handleWithdraw(p)}
+                              className="px-2 py-1 bg-red-50 text-red-500 text-xs font-bold rounded-lg border border-red-200 hover:bg-red-100">
+                              Withdraw
+                            </button>
+                          )}
+                          {!canWithdraw&&<span className="text-xs text-slate-300">Locked</span>}
+                        </td>
                       </tr>
                     );
                   })}
                   <tr className="bg-slate-50 border-t border-slate-200">
-                    <td colSpan={4} className="px-3 py-2 text-xs font-black text-slate-500">Sub-total · {monthKey} ({props.length} doctors)</td>
+                    <td colSpan={5} className="px-3 py-2 text-xs font-black text-slate-500">Sub-total · {monthKey} ({props.length})</td>
                     <td className="px-3 py-2 font-black text-blue-700">{inr(monthSubtotals[monthKey])}</td>
                     <td colSpan={3}></td>
                   </tr>
                 </React.Fragment>
               ))}
             </tbody>
-            {filtered.length>0 && (
+            {filtered.length>0&&(
               <tfoot>
                 <tr className="bg-blue-50 border-t-2 border-blue-200">
-                  <td colSpan={4} className="px-3 py-3 text-xs font-black text-blue-800">Grand Total ({filtered.length})</td>
+                  <td colSpan={5} className="px-3 py-3 text-xs font-black text-blue-800">Grand Total ({filtered.length})</td>
                   <td className="px-3 py-3 font-black text-blue-700">{inr(grandTotal)}</td>
                   <td colSpan={3}></td>
                 </tr>
@@ -894,7 +1201,7 @@ function MyProposalsView({myProposals}) {
             )}
           </table>
         </div>
-        {filtered.length===0 && <div className="text-center py-10 text-slate-300 text-sm">No proposals found</div>}
+        {filtered.length===0&&<div className="text-center py-10 text-slate-300 text-sm">No proposals found</div>}
       </div>
     </div>
   );
@@ -963,7 +1270,7 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, s
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>{["Doctor","HQ","Month","Year","Proposed","Status","Issued Amt","By","Action"].map(h=>(
+              <tr>{["Doctor","HQ","Type","Month","Year","Proposed","Status","Issued Amt","By","Action"].map(h=>(
                 <th key={h} className="px-3 py-2.5 text-left text-xs font-bold uppercase text-slate-400">{h}</th>
               ))}</tr>
             </thead>
@@ -977,6 +1284,11 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, s
                   <tr key={p.id} className="hover:bg-slate-50">
                     <td className="px-3 py-2.5 font-semibold text-slate-800">{doc?.name||"—"}</td>
                     <td className="px-3 py-2.5 text-xs text-slate-400">{doc?.hq}</td>
+                    <td className="px-3 py-2.5">
+                      <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${p.type==="additional"?"bg-indigo-100 text-indigo-700":"bg-slate-100 text-slate-600"}`}>
+                        {p.type==="additional"?"Additional":"Primary"}
+                      </span>
+                    </td>
                     <td className="px-3 py-2.5 text-xs text-slate-500">{p.month}</td>
                     <td className="px-3 py-2.5 text-xs text-slate-400">{p.year||"FY 2026-27"}</td>
                     <td className="px-3 py-2.5 font-bold text-slate-700">{inr(proposed)}</td>
@@ -1334,8 +1646,16 @@ function SalesTrackView({salesData, onSave, isAdmin, notify, setConfirm}) {
         </div>
         <div className="mt-2 text-xs text-slate-400">
           {uploadMode==="sku"
-            ? "SKU mode columns: HQ, Doctor Name, Month, Product Name, Qty — app computes PTR value"
-            : "Value mode columns: HQ, Doctor Name, Apr, May, Jun… (monthly PTR values) — SKU upload overrides this"}
+            ? "SKU mode: HQ, Doctor Name, Month, Product Name, Qty — app computes PTR value"
+            : "Value mode: HQ, Doctor Name, Apr, May, Jun… (monthly PTR values) — SKU upload overrides"}
+        </div>
+        <div className="flex gap-2 mt-2">
+          <button onClick={downloadSampleSKU} className="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-200 border border-slate-200">
+            📥 Sample SKU File
+          </button>
+          <button onClick={downloadSampleValue} className="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-200 border border-slate-200">
+            📥 Sample Value File
+          </button>
         </div>
       </div>
 
