@@ -1332,9 +1332,20 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, o
     });
   };
 
+  const bulkUnconfirm = () => {
+    const confirmed = selectedProposals.filter(p=>p.status===STATUSES.CONFIRMED);
+    if (!confirmed.length) return;
+    setConfirm({
+      msg:`Unconfirm ${confirmed.length} proposal${confirmed.length>1?"s":""} totalling ${inr(confirmed.reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0))}? They will revert to Approved.`,
+      okLabel:`Unconfirm ${confirmed.length}`,
+      onOk:()=>{ confirmed.forEach(p=>onConfirm(p.id, null, true)); setSelected({}); }
+    });
+  };
+
   // Bulk select helpers based on current tab
-  const canBulkApprove  = selectedProposals.some(p=>p.status===STATUSES.PROPOSED);
-  const canBulkConfirm  = selectedProposals.some(p=>p.status===STATUSES.APPROVED);
+  const canBulkApprove   = selectedProposals.some(p=>p.status===STATUSES.PROPOSED);
+  const canBulkConfirm   = selectedProposals.some(p=>p.status===STATUSES.APPROVED);
+  const canBulkUnconfirm = selectedProposals.some(p=>p.status===STATUSES.CONFIRMED);
 
   return (
     <div>
@@ -1374,6 +1385,12 @@ function ApproveView({proposals, proposalList, onApprove, onReject, onConfirm, o
               <button onClick={bulkConfirm}
                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-lg">
                 🎯 Confirm Selected ({selectedProposals.filter(p=>p.status===STATUSES.APPROVED).length}) — {inr(selectedProposals.filter(p=>p.status===STATUSES.APPROVED).reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0))}
+              </button>
+            )}
+            {canBulkUnconfirm && (
+              <button onClick={bulkUnconfirm}
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-lg">
+                ↩ Unconfirm Selected ({selectedProposals.filter(p=>p.status===STATUSES.CONFIRMED).length}) — {inr(selectedProposals.filter(p=>p.status===STATUSES.CONFIRMED).reduce((s,p)=>s+Number(p.entries?.[0]?.proposed||0),0))}
               </button>
             )}
             <button onClick={deselectAll} className="px-3 py-1.5 bg-slate-600 text-slate-300 text-xs font-bold rounded-lg">Clear</button>
