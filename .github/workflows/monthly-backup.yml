@@ -1,0 +1,30 @@
+name: CRM Monthly Backup
+
+on:
+  schedule:
+    # Runs daily at 18:30 UTC (midnight IST) on days 28-31
+    # backup.py checks if actual date is 1st of month
+    - cron: '30 18 28-31 * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run backup
+        env:
+          FIREBASE_URL: ${{ secrets.FIREBASE_URL }}
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        run: python3 .github/scripts/backup.py
