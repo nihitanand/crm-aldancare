@@ -2,29 +2,118 @@ name: CRM Monthly Backup
 
 on:
   schedule:
-    # Runs daily at 18:30 UTC (midnight IST) on days 28-31
-    # backup.py checks if actual date is 1st of month
-    - cron: '30 18 28-31 * *'
+    - cron: '0 0 1 * *'
   workflow_dispatch:
 
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Create Backup & Save to Firebase
+        id: backup
+        run: |
+          python3 << 'PYEOF'
+          import json, urllib.request, os
+          from datetime import datetime
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+          DB_URL = "https://fintech-nd-default-rtdb.asia-southeast1.firebasedatabase.app"
+
+          # Read full proposals data
+          req = urllib.request.Request(f"{DB_URL}/crm26/v1/proposals.json")
+          with urllib.request.urlopen(req) as r:
+              raw = json.loads(r.read())
+
+          def to_list(v):
+              if isinstance(v, dict): return [x for x in v.values() if x]
+              if isinstance(v, list): return [x for x in v if x]
+              return []
+
+          proposals = to_list(raw)
+
+          # Stats
+          statuses = {"Proposed":0,"Approved":0,"Confirmed":0}
+          confirmed_amt = 0
+          hq_counts = {}
+          for p in proposals:
+              s = p.get("status","")
+              if s in statuses: statuses[s] += 1
+              if s == "Confirmed":
+                  entries = p.get("issuedEntries") or p.get("entries") or []
+                  confirmed_amt += sum(float(e.get("issued", e.get("proposed",0))) for e in (entries if isinstance(entries,list) else list(entries.values())))
+              doc_key = p.get("doctorKey","")
+              hq = doc_key.split("___")[-1] if "___" in doc_key else "Unknown"
+              hq_counts[hq] = hq_counts.get(hq,0) + 1
+
+          now = datetime.utcnow()
+          filename = f"CRM_Backup_{now.strftime('%Y-%m-%d')}.json"
+          backup_key = now.strftime('%Y-%m')
+
+          backup = {
+              "generated": now.strftime("%Y-%m-%d %H:%M:%S UTC"),
+              "filename": filename,
+              "summary": {
+                  "total_proposals": len(proposals),
+                  "proposed": statuses["Proposed"],
+                  "approved": statuses["Approved"],
+                  "confirmed": statuses["Confirmed"],
+                  "confirmed_amount": round(confirmed_amt),
+              },
+              "proposals": proposals,
+          }
+
+          # Save to Firebase
+          payload = json.dumps(backup).encode()
+          req2 = urllib.request.Request(
+              f"{DB_URL}/crm26/backups_monthly/{backup_key}.json",
+              data=payload, method='PUT',
+              headers={'Content-Type': 'application/json'}
+          )
+          with urllib.request.urlopen(req2) as r:
+              r.read()
+
+          size_kb = len(payload) // 1024
+
+          print(f"✅ Backup saved: crm26/backups_monthly/{backup_key}")
+          print(f"   Size: {size_kb} KB | Proposals: {len(proposals)}")
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"filename={filename}\n")
+              f.write(f"size_kb={size_kb}\n")
+              f.write(f"backup_key={backup_key}\n")
+              f.write(f"total={len(proposals)}\n")
+              f.write(f"proposed={statuses['Proposed']}\n")
+              f.write(f"approved={statuses['Approved']}\n")
+              f.write(f"confirmed={statuses['Confirmed']}\n")
+              f.write(f"confirmed_amt={int(confirmed_amt)}\n")
+          PYEOF
+
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
         with:
-          python-version: '3.11'
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: hr@aldancare.com
+          from: CRM 26 Backup <${{ secrets.MAIL_USERNAME }}>
+          subject: "✅ CRM 26 Monthly Backup — ${{ steps.backup.outputs.filename }}"
+          body: |
+            Hi,
 
-      - name: Run backup
-        env:
-          FIREBASE_URL: ${{ secrets.FIREBASE_URL }}
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-        run: python3 .github/scripts/backup.py
+            CRM 26 monthly backup completed successfully.
+
+            📁 Backup Details:
+            • File        : ${{ steps.backup.outputs.filename }}
+            • Stored in   : Firebase → crm26/backups_monthly/${{ steps.backup.outputs.backup_key }}
+            • Size        : ${{ steps.backup.outputs.size_kb }} KB
+
+            📊 Proposal Summary:
+            • Total       : ${{ steps.backup.outputs.total }}
+            • Proposed    : ${{ steps.backup.outputs.proposed }}
+            • Approved    : ${{ steps.backup.outputs.approved }}
+            • Confirmed   : ${{ steps.backup.outputs.confirmed }} (₹${{ steps.backup.outputs.confirmed_amt }} issued)
+
+            To download: Share this email with Claude and ask to fetch the backup from Firebase path crm26/backups_monthly/${{ steps.backup.outputs.backup_key }}
+
+            Regards,
+            CRM 26 — Aldan Healthcare
